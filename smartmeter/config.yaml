@@ -14,8 +14,9 @@ arch:
 # Required with an s6-overlay base image: the image brings its own init and
 # Docker's would fight with it.
 init: false
-startup: application
-boot: auto
+# startup and boot are left out on purpose: "application" and "auto" are the
+# defaults, and the add-on linter rejects setting a key to the value it already
+# has.
 # suggested_display_precision and the discovery origin block need this.
 homeassistant: "2024.1.0"
 
@@ -34,7 +35,8 @@ map:
   - addon_config:rw
 
 ingress: true
-ingress_port: 8099
+# ingress_port is left out: 8099 is the default and is what the status page
+# listens on. See DEFAULT_PORT in web/server.py, which a test keeps in step.
 panel_icon: mdi:transmission-tower
 panel_title: Smart meter
 

@@ -76,8 +76,16 @@ class TestConfigYaml:
         assert "key" not in config["options"]
 
     def test_ingress_points_at_the_status_page(self, config):
+        # 8099 is Supervisor's default and the add-on linter refuses a key that
+        # restates a default, so the port lives only in the Python side.
         assert config["ingress"] is True
-        assert config["ingress_port"] == DEFAULT_PORT
+        assert config.get("ingress_port", 8099) == DEFAULT_PORT
+
+    def test_no_key_restates_a_supervisor_default(self, config):
+        # The add-on linter treats these as errors, and the build fails on it.
+        assert "startup" not in config
+        assert "boot" not in config
+        assert "ingress_port" not in config
 
     def test_the_stage_is_honest(self, config):
         # Nothing has been confirmed against a physical meter yet.
