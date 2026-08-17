@@ -1,0 +1,9 @@
+# Synthetic. Produced by tools/generate_fixtures.py, not captured from a meter.
+#
+# A three-phase telegram carrying all fifteen documented values, encrypted with
+# the test key 36C66639E48A8CA4D6BC8B282A793BBB. It exceeds the 250 byte limit
+# of a single M-Bus frame, so it is segmented: CI 0x00 then CI 0x11. This is the
+# normal case on a three-phase meter, which is why it is the main fixture.
+#
+68ffff6853ff000167db08534147010203040582012a2100001267a87c43fb6a08bf73527ef176263245143845ce15de0e6f966d12fba64493fdcded825feb4f76f3e843b59e9e52c7329621293932abb068e18571091b26defea4b5bfd19e80031008dbac2609c77965df484de07ea079074cc2e8c8354a6bb3bdd2a868f127eee205bcde276174263a3925091b81e84592c992eeecabddcf61f4fe230a247adc08fb351bbf073c3671f99198efaec278e0396c16e3164830123d38e9f13298759352fd134214ef5feb7dca791d9e6946335f5bf7e587dbfaea32603e25b9ddded8ff415d75c6f536ce13c46bbd57da5d639b1b8a52c3e42b352ef262d0f0e9e2eaa3d816
+6842426853ff110167812f611b7af035679f838c22de010bb64e9a55c25ef893b81edcdc54ce7b060bba2de40787e26310dfe4808a27e05c09f7e38d833f48532f65ec2948235016

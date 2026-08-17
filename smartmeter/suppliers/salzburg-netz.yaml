@@ -1,0 +1,44 @@
+# Salzburg Netz
+#
+# Salzburg Netz publishes its own "Technische Beschreibung Kundenschnittstelle"
+# with the same content as the TINETZ document, both being part of the KSM West
+# cooperation. Frame layout, TSAPs, baud rate and security control byte match.
+name: Salzburg Netz
+status: documented
+manufacturer: Sagemcom
+model: T210-D (M-Bus customer interface)
+
+serial:
+  baudrate: 2400
+  bytesize: 8
+  parity: E
+  stopbits: 1
+
+tsap: [0x01, 0x67]
+reassembly_timeout: 15.0
+
+security_control: 0x21
+header_order: sc_fc
+
+layout: obis_tagged
+
+expected_obis:
+  - "0-0:1.0.0.255"
+  - "0-0:96.1.0.255"
+  - "0-0:42.0.0.255"
+  - "1-0:32.7.0.255"
+  - "1-0:52.7.0.255"
+  - "1-0:72.7.0.255"
+  - "1-0:31.7.0.255"
+  - "1-0:51.7.0.255"
+  - "1-0:71.7.0.255"
+  - "1-0:1.7.0.255"
+  - "1-0:2.7.0.255"
+  - "1-0:1.8.0.255"
+  - "1-0:2.8.0.255"
+  - "1-0:3.8.0.255"
+  - "1-0:4.8.0.255"
+
+key_source: >-
+  Order the customer interface in the Salzburg Netz portal. The key is sent by
+  post as 32 hexadecimal characters.

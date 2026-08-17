@@ -1,0 +1,41 @@
+# IKB - Innsbrucker Kommunalbetriebe
+#
+# Member of the KSM West cooperation, so the specification is the shared one.
+# No IKB document has been read for this profile: it is a copy of the TINETZ
+# reference. If you have an IKB meter, a capture would let this be promoted.
+name: IKB (Innsbrucker Kommunalbetriebe)
+status: assumed
+manufacturer: Sagemcom
+model: T210-D (M-Bus customer interface)
+
+serial:
+  baudrate: 2400
+  bytesize: 8
+  parity: E
+  stopbits: 1
+
+tsap: [0x01, 0x67]
+reassembly_timeout: 15.0
+
+security_control: 0x21
+header_order: sc_fc
+
+layout: obis_tagged
+
+expected_obis:
+  - "0-0:1.0.0.255"
+  - "0-0:96.1.0.255"
+  - "1-0:32.7.0.255"
+  - "1-0:31.7.0.255"
+  - "1-0:1.7.0.255"
+  - "1-0:2.7.0.255"
+  - "1-0:1.8.0.255"
+  - "1-0:2.8.0.255"
+
+notes: >-
+  Copied from the TINETZ reference because IKB is part of the same KSM West
+  cooperation. Nobody has checked it against an IKB meter.
+
+key_source: >-
+  Request the key from IKB customer service. It is issued as 32 hexadecimal
+  characters.

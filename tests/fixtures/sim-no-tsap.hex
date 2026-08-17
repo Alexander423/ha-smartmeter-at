@@ -1,0 +1,7 @@
+# Synthetic. Produced by tools/generate_fixtures.py, not captured from a meter.
+#
+# A meter that puts the DLMS data straight after the CI field with no STSAP and
+# DTSAP bytes. No Austrian operator is known to do this, but the generic profile
+# detects it, and this fixture is what proves the detection works.
+#
+68e5e56853ff10db08534147010203040581d6210000126a5c810cb27107ca982f4804170669aebed7804fd44e17ad73964120115243bfb952742178935a815479cf39a65f19a4e22ada9b2a833968ee06605db82226bb4169a7cd1fa390a1db4ab6b1087d3dd73ecca372ef84b596c8bc48c93fd103b47107d1d6ec435ea09c82dfe2fe33809d577a488069c7947d7f617b6ede3d7cba999dba99c4a27989c0a649e35ef69b9c45451649cbc8a01b3f2f735a0780261fe5dc882d1cfbced1712243593e304d2313bf2d913f78286a8647234981cec5a589c756561ff5caf41468f6792a25718953fd3616

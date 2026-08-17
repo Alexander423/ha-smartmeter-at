@@ -1,0 +1,39 @@
+# Vorarlberger Energienetze (VEN)
+#
+# Member of the KSM West cooperation. Same situation as the IKB profile: the
+# shared specification is assumed to apply, but no VEN document was read.
+name: Vorarlberger Energienetze
+status: assumed
+manufacturer: Sagemcom
+model: T210-D (M-Bus customer interface)
+
+serial:
+  baudrate: 2400
+  bytesize: 8
+  parity: E
+  stopbits: 1
+
+tsap: [0x01, 0x67]
+reassembly_timeout: 15.0
+
+security_control: 0x21
+header_order: sc_fc
+
+layout: obis_tagged
+
+expected_obis:
+  - "0-0:1.0.0.255"
+  - "0-0:96.1.0.255"
+  - "1-0:32.7.0.255"
+  - "1-0:31.7.0.255"
+  - "1-0:1.7.0.255"
+  - "1-0:2.7.0.255"
+  - "1-0:1.8.0.255"
+  - "1-0:2.8.0.255"
+
+notes: >-
+  Copied from the TINETZ reference on the strength of the shared KSM West
+  specification. Not checked against a Vorarlberg meter.
+
+key_source: >-
+  Request the customer interface and the key from Vorarlberger Energienetze.

@@ -1,0 +1,7 @@
+# Synthetic. Produced by tools/generate_fixtures.py, not captured from a meter.
+#
+# A single-phase telegram: no L2 or L3 voltage or current. Fits in one frame,
+# so CI is 0x10. Used to check that missing phases produce fewer entities
+# instead of an error.
+#
+68e7e76853ff100167db08534147010203040581d62100001268464b6ba75394eeeeaa849f387c2a8cd4d591e4cdcfe9e361c38714a1d95c9154ced22164a3bcacb882bf1f9477dd2382ade3b19231fdcb6cf3ef80f75c3815d55ef933e150ab11d78dc076da68260198b31d6cf59fe8de89bfc41ecd775422aadfaab842926e305549faa00ac2fd25e2dec9bf406e35f21b845c7315808b290532573133a3c38660c60a2482c2745628b8e53c84619ad422d57df921e844ac308189e16a4489973aeae1e9e3c0fc1b3d5d2b1601de84814c80c979d1c5eecc101e3dd5573122bfe6f956d85ac559ef3a887416

@@ -1,0 +1,47 @@
+# EVN / Netz Niederoesterreich
+#
+# Different meter to the KSM West operators: Netz NOE deploys the Kaifa MA309.
+# The link layer looks the same in every community capture that has been
+# published (2400 8E1, CI segmentation, TSAP 01 67, general-glo-ciphering with
+# security control 0x21), and the notification body carries OBIS codes, so the
+# tagged layout applies. Nobody has read an EVN specification for this profile
+# and nobody has run it against an EVN meter.
+name: EVN / Netz Niederoesterreich
+status: assumed
+manufacturer: Kaifa
+model: MA309 (M-Bus customer interface)
+
+serial:
+  baudrate: 2400
+  bytesize: 8
+  parity: E
+  stopbits: 1
+
+# Detected from the first telegram rather than assumed, because this is the
+# profile most likely to differ from the KSM West documents.
+tsap: auto
+reassembly_timeout: 15.0
+
+security_control: 0x21
+header_order: auto
+
+layout: obis_tagged
+
+expected_obis:
+  - "0-0:1.0.0.255"
+  - "0-0:96.1.0.255"
+  - "1-0:32.7.0.255"
+  - "1-0:31.7.0.255"
+  - "1-0:1.7.0.255"
+  - "1-0:2.7.0.255"
+  - "1-0:1.8.0.255"
+  - "1-0:2.8.0.255"
+
+notes: >-
+  Netz NOE uses a different meter to the western operators, so this profile
+  detects the TSAP bytes and the header order instead of assuming them. If your
+  values look wrong, enable capture_raw and open an issue.
+
+key_source: >-
+  Activate the customer interface in the Netz NOE portal (smartmeter.netz-noe.at).
+  The key is sent by post.
