@@ -138,6 +138,12 @@ class TestVersions:
         changelog = (ADDON / "CHANGELOG.md").read_text(encoding="utf-8")
         assert f"## {config['version']}" in changelog
 
+    def test_the_lockfile_agrees_with_the_version(self):
+        # uv.lock records the project's own version, so a bump that forgets to
+        # re-lock leaves the two out of step. CI notices, but only after a push.
+        lock = (ROOT / "uv.lock").read_text(encoding="utf-8")
+        assert f'name = "ha-smartmeter-at"\nversion = "{__version__}"' in lock
+
 
 class TestDockerfile:
     def test_the_base_image_is_explicit_and_pinned(self, dockerfile):
