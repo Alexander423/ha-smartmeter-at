@@ -24,6 +24,7 @@ from typing import Any
 import yaml
 
 from .errors import ProfileError
+from .framing import INTERFACES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,19 +43,54 @@ class SerialSettings:
     bytesize: int = 8
     parity: str = "E"
     stopbits: int = 1
+    #: DSMR P1 only sends while its Data Request line is held high. Most cables
+    #: wire that to +5V, but some expect the host to raise DTR or RTS.
+    data_request: str = "none"
 
     def describe(self) -> str:
         return f"{self.baudrate} baud {self.bytesize}{self.parity}{self.stopbits}"
+
+
+#: Serial settings each interface uses, unless a profile overrides them.
+INTERFACE_DEFAULTS: dict[str, SerialSettings] = {
+    "mbus": SerialSettings(2400, 8, "E", 1),
+    "p1": SerialSettings(115200, 8, "N", 1, data_request="both"),
+    "hdlc": SerialSettings(9600, 8, "N", 1),
+}
+
+#: Why an interface cannot be read by this add-on, in the user's terms.
+UNSUPPORTED_INTERFACES: dict[str, str] = {
+    "oms-ir": (
+        "This meter speaks OMS over M-Bus rather than DLMS, which is a different "
+        "protocol that this add-on does not decode. It also needs an optical read "
+        "head rather than an M-Bus adapter. See the README for the projects that do "
+        "read it."
+    ),
+    "mep": (
+        "This meter uses the MEP expansion port with ANSI C12.19, which is a "
+        "different protocol and a different connector from anything this add-on "
+        "reads. There is no adapter that would make it work."
+    ),
+    "wmbus": (
+        "This meter sends over wireless M-Bus. Reading it needs an 868 MHz radio "
+        "receiver rather than a cable, and this add-on only reads wired interfaces."
+    ),
+}
 
 
 @dataclass(frozen=True, slots=True)
 class SupplierProfile:
     id: str
     name: str
+    #: mbus, p1, hdlc, oms-ir, mep or wmbus. Decides the framing and the serial
+    #: settings, and whether the add-on can read this operator at all.
+    interface: str = "mbus"
     serial: SerialSettings = field(default_factory=SerialSettings)
+    #: Bundesländer this operator supplies. Several operators serve more than one.
+    regions: tuple[str, ...] = ()
 
     #: (STSAP, DTSAP) pair in front of the DLMS data, None for none, "auto" to
-    #: work it out from the first telegram.
+    #: work it out from the first telegram. M-Bus only.
     tsap: tuple[int, int] | str | None = "auto"
     reassembly_timeout: float = 15.0
 
@@ -62,6 +98,9 @@ class SupplierProfile:
     security_control: int = 0x21
     #: "sc_fc", "fc_sc" or "auto". Some operators put the frame counter first.
     header_order: str = "sc_fc"
+    #: True when the operator issues a second key for authentication, so the
+    #: user can be told to go and get it instead of quietly losing the check.
+    auth_key_expected: bool = False
 
     #: "obis_tagged" or "positional".
     layout: str = "obis_tagged"
@@ -92,8 +131,20 @@ class SupplierProfile:
         return self.status != "verified"
 
     @property
+    def supported(self) -> bool:
+        """False when the operator's interface carries something other than DLMS."""
+        return self.interface not in UNSUPPORTED_INTERFACES
+
+    def unsupported_hint(self) -> str:
+        return UNSUPPORTED_INTERFACES.get(self.interface, "")
+
+    @property
     def label(self) -> str:
         return self.name if self.status == "verified" else f"{self.name} ({self.status})"
+
+    @property
+    def region_label(self) -> str:
+        return ", ".join(self.regions) if self.regions else "Austria"
 
 
 def _coerce_tsap(value: Any) -> tuple[int, int] | str | None:
@@ -112,11 +163,14 @@ def _from_mapping(profile_id: str, data: dict[str, Any]) -> SupplierProfile:
     serial_data = data.get("serial") or {}
     unknown = set(data) - {
         "name",
+        "interface",
+        "regions",
         "serial",
         "tsap",
         "reassembly_timeout",
         "security_control",
         "header_order",
+        "auth_key_expected",
         "layout",
         "obis_order",
         "scales",
@@ -134,6 +188,16 @@ def _from_mapping(profile_id: str, data: dict[str, Any]) -> SupplierProfile:
     if status not in ("verified", "documented", "assumed"):
         raise ProfileError(f"profile {profile_id} has an unknown status {status!r}")
 
+    interface = data.get("interface", "mbus")
+    if interface not in INTERFACES:
+        raise ProfileError(
+            f"profile {profile_id} has an unknown interface {interface!r}",
+            hint="Valid interfaces are: " + ", ".join(INTERFACES) + ".",
+        )
+    # The serial settings follow from the interface, so a profile only states
+    # them when its operator deviates.
+    defaults = INTERFACE_DEFAULTS.get(interface, SerialSettings())
+
     layout = data.get("layout", "obis_tagged")
     if layout not in ("obis_tagged", "positional"):
         raise ProfileError(f"profile {profile_id} has an unknown layout {layout!r}")
@@ -144,16 +208,20 @@ def _from_mapping(profile_id: str, data: dict[str, Any]) -> SupplierProfile:
     return SupplierProfile(
         id=profile_id,
         name=data.get("name", profile_id),
+        interface=interface,
+        regions=tuple(data.get("regions") or ()),
         serial=SerialSettings(
-            baudrate=int(serial_data.get("baudrate", 2400)),
-            bytesize=int(serial_data.get("bytesize", 8)),
-            parity=str(serial_data.get("parity", "E")).upper(),
-            stopbits=int(serial_data.get("stopbits", 1)),
+            baudrate=int(serial_data.get("baudrate", defaults.baudrate)),
+            bytesize=int(serial_data.get("bytesize", defaults.bytesize)),
+            parity=str(serial_data.get("parity", defaults.parity)).upper(),
+            stopbits=int(serial_data.get("stopbits", defaults.stopbits)),
+            data_request=str(serial_data.get("data_request", defaults.data_request)).lower(),
         ),
         tsap=_coerce_tsap(data.get("tsap", "auto")),
         reassembly_timeout=float(data.get("reassembly_timeout", 15.0)),
         security_control=int(data.get("security_control", 0x21)),
         header_order=header_order,
+        auth_key_expected=bool(data.get("auth_key_expected", False)),
         layout=layout,
         obis_order=tuple(data.get("obis_order") or ()),
         scales={str(k): float(v) for k, v in (data.get("scales") or {}).items()},

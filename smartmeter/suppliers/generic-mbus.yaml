@@ -1,0 +1,32 @@
+# Generic wired M-Bus
+#
+# Fallback for an operator with no profile of its own whose meter has an RJ12
+# socket wired as M-Bus on pins 3 and 4. Assumes only the physical layer, which
+# is the same everywhere, and works the rest out from the first telegram:
+# whether TSAP bytes are present, which order the security control byte and
+# frame counter come in, and which OBIS codes the meter sends.
+name: Generic M-Bus (auto-detect)
+status: assumed
+regions: []
+interface: mbus
+manufacturer: Unknown
+model: Smart meter with wired M-Bus
+
+tsap: auto
+reassembly_timeout: 15.0
+
+security_control: 0x21
+header_order: auto
+
+layout: obis_tagged
+
+# Deliberately empty: nothing is expected, so nothing is reported missing.
+expected_obis: []
+
+notes: >-
+  Detects the frame layout from the first telegram. Use this to find out whether
+  your meter works at all, then send a capture so a named profile can be added.
+
+key_source: >-
+  Every Austrian grid operator issues the key on request, as 32 hexadecimal
+  characters, usually by post.

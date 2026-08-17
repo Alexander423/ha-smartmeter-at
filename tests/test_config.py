@@ -54,8 +54,14 @@ class TestRejectedConfiguration:
         [
             ({"key": "nope"}, "0-9 and A-F"),
             ({"key": ""}, "Enter the key"),
-            ({"supplier": "wiener-netze"}, "Choose one of"),
-            ({"port": ""}, "pick your M-Bus adapter"),
+            ({"supplier": "stadtwerke-atlantis"}, "Choose one of"),
+            # Listed in the dropdown, but its meters carry a different protocol.
+            ({"supplier": "netz-ooe"}, "OMS over M-Bus"),
+            ({"supplier": "linz-netz"}, "ANSI C12.19"),
+            ({"port": ""}, "pick your M-Bus slave adapter"),
+            # The adapter named has to follow the operator's interface.
+            ({"port": "", "supplier": "energienetze-steiermark"}, "pick your USB P1 cable"),
+            ({"port": "", "supplier": "wiener-netze"}, "pick your infrared read head"),
             ({"log_level": "loud"}, "Choose one of"),
             ({"min_publish_interval": -5}, "publish every telegram"),
             ({"stale_after": 0}, "six missed telegrams"),

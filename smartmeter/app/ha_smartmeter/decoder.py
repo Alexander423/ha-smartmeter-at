@@ -22,10 +22,9 @@ from dataclasses import dataclass, field
 from .dlms.apdu import parse_ciphered_apdu
 from .dlms.crypto import decrypt
 from .dlms.telegram import parse_telegram
-from .errors import FrameError, KeyMismatchError, SmartmeterError
-from .mbus.reader import FrameReader
-from .mbus.reassembly import Reassembler
-from .models import MBusFrame, Telegram
+from .errors import DecryptionError, FrameError, SmartmeterError
+from .framing import Framer, build_framer
+from .models import Telegram
 from .obis import BY_KEY
 from .suppliers import SupplierProfile
 
@@ -58,30 +57,24 @@ class Decoder:
     profile: SupplierProfile
     key: bytes
     auth_key: bytes | None = None
-    #: Called with every checksum-valid frame, before reassembly. Used by capture mode.
-    on_frame: Callable[[MBusFrame], None] | None = None
+    #: Called with the raw bytes of every link-layer frame that passed its
+    #: checksum, before reassembly. Capture mode writes these.
+    on_frame: Callable[[bytes], None] | None = None
 
-    reader: FrameReader = field(default_factory=FrameReader)
-    reassembler: Reassembler = field(init=False)
+    framer: Framer = field(init=False)
     stats: DecoderStats = field(default_factory=DecoderStats)
     _warned_ranges: set[str] = field(default_factory=set)
     _alarmed: bool = False
+    _warned_no_gak: bool = False
 
     def __post_init__(self) -> None:
-        self.reassembler = Reassembler(
-            tsap=self.profile.tsap, timeout=self.profile.reassembly_timeout
-        )
+        self.framer = build_framer(self.profile, on_frame=self.on_frame)
 
     # ------------------------------------------------------------------ public
 
     def feed(self, data: bytes) -> list[Telegram]:
         telegrams: list[Telegram] = []
-        for frame in self.reader.feed(data):
-            if self.on_frame is not None:
-                self.on_frame(frame)
-            message = self.reassembler.push(frame)
-            if message is None:
-                continue
+        for message in self.framer.feed(data):
             try:
                 telegrams.append(self.decode_message(message))
             except SmartmeterError as exc:
@@ -118,12 +111,11 @@ class Decoder:
         return telegram
 
     def check_timeout(self) -> None:
-        self.reassembler.check_timeout()
+        self.framer.check_timeout()
 
     def reset(self) -> None:
         """Called after the serial connection is re-established."""
-        self.reader.reset()
-        self.reassembler.reset()
+        self.framer.reset()
 
     # ----------------------------------------------------------------- private
 
@@ -136,6 +128,14 @@ class Decoder:
         )
         if telegram.authenticated:
             _LOGGER.info("Telegram authenticity is verified against the GCM tag")
+        elif self.profile.auth_key_expected and self.auth_key is None:
+            # These meters do send a tag, so a missing second key is a setting
+            # the user can fix rather than a limitation of the interface.
+            _LOGGER.warning(
+                "Your meter authenticates its telegrams but no authentication key is "
+                "configured, so the tag is not being checked. Your operator's portal "
+                "shows two keys: put the GUEK in 'key' and the GAK in 'auth_key'."
+            )
         else:
             _LOGGER.info(
                 "This meter sends no authentication tag, so telegrams are accepted on "
@@ -174,9 +174,10 @@ class Decoder:
     def _should_alarm(self, exc: SmartmeterError) -> bool:
         if self._alarmed:
             return self.stats.consecutive_failures % REPEAT_ALARM_EVERY == 0
-        # A wrong key on a add-on that has never decoded anything needs no
-        # patience: nothing is going to improve on the next telegram.
-        if isinstance(exc, KeyMismatchError) and not self.stats.ever_decoded:
+        # A key problem on an add-on that has never decoded anything needs no
+        # patience: nothing is going to improve on the next telegram. This
+        # covers a wrong encryption key and a wrong authentication key alike.
+        if isinstance(exc, DecryptionError) and not self.stats.ever_decoded:
             return True
         return self.stats.consecutive_failures >= FAILURES_BEFORE_ALARM
 

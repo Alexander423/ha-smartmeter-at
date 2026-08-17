@@ -1,7 +1,7 @@
 [project]
 name = "ha-smartmeter-at"
-version = "0.1.0"
-description = "Reads the M-Bus customer interface of Austrian smart meters and publishes to Home Assistant over MQTT."
+version = "0.2.0"
+description = "Reads the customer interface of Austrian smart meters and publishes to Home Assistant over MQTT."
 requires-python = ">=3.12,<3.13"
 license = { text = "MIT" }
 dependencies = [

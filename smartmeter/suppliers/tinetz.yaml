@@ -1,28 +1,28 @@
 # TINETZ - Tiroler Netze
 #
-# Reference profile. Every field here comes from the TINETZ document
-# "Technische Beschreibung Kundenschnittstelle". Nothing has been checked
-# against a physical meter yet, so the status is "documented", not "verified".
+# Reference profile. The frame layout comes from the TINETZ document
+# "Technische Beschreibung Kundenschnittstelle", part of the KSM West
+# specification shared with Salzburg Netz, IKB and Vorarlberger Energienetze.
 #
-# Part of the KSM West specification, shared with Salzburg Netz, IKB and
-# Vorarlberger Energienetze.
+# The meter is a Kaifa, not a Sagemcom. Confirmed three ways: the Oesterreichs
+# Energie overview of Austrian meter types lists TINETZ with the Kaifa MA110M
+# and MA309M on M-Bus, esphome-dlms-meter names TINETZ among the operators its
+# Kaifa MA309M component serves, and a Tyrolean user of this add-on has an
+# MA309MH4LAT1 in the meter cabinet.
 name: TINETZ (Tiroler Netze)
 status: documented
-manufacturer: Sagemcom
-model: T210-D (M-Bus customer interface)
-
-serial:
-  baudrate: 2400
-  bytesize: 8
-  parity: E
-  stopbits: 1
+regions: [Tirol]
+interface: mbus
+manufacturer: Kaifa
+model: MA309M / MA110M
 
 # STSAP 0x01 is the Management Logical Device, DTSAP 0x67 the Consumer
 # Information Push Client 103.
 tsap: [0x01, 0x67]
 reassembly_timeout: 15.0
 
-# Security Suite 1, encryption applied, unicast key set.
+# Security Suite 1, encryption applied, unicast key set. The authentication bit
+# is clear, so there is no GCM tag on the wire and one key is issued.
 security_control: 0x21
 header_order: sc_fc
 
@@ -46,9 +46,10 @@ expected_obis:
   - "1-0:4.8.0.255"
 
 notes: >-
-  Single-phase meters send only the L1 voltage and current. The missing L2 and
-  L3 values are normal and no entities are created for them.
+  Three-phase meters are the MA309M, single-phase the MA110M. A single-phase
+  meter sends only the L1 voltage and current, and no entities are created for
+  the phases it leaves out.
 
 key_source: >-
-  Request the customer interface and the key in the TINETZ customer portal. The
-  key arrives by post as 32 hexadecimal characters.
+  Request the customer interface in the TINETZ customer portal. The key arrives
+  by post as 32 hexadecimal characters.

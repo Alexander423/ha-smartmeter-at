@@ -1,0 +1,31 @@
+# Generic infrared, DLMS over HDLC
+#
+# Fallback for a meter read through an optical head whose data is DLMS wrapped
+# in HDLC: 9600 8N1, frames between 0x7E flags. This is what Wiener Netze uses.
+#
+# It is not what Netz Oberoesterreich uses. Those meters push OMS over M-Bus
+# through the same kind of read head, which is a different protocol entirely and
+# will not decode here.
+name: Generic infrared (auto-detect)
+status: assumed
+regions: []
+interface: hdlc
+manufacturer: Unknown
+model: Smart meter with an optical port
+
+tsap: null
+reassembly_timeout: 15.0
+
+security_control: 0x21
+header_order: auto
+
+layout: obis_tagged
+expected_obis: []
+
+notes: >-
+  Needs a magnetic infrared read head. If nothing decodes and your operator is
+  Netz Oberoesterreich, this is the wrong add-on: those meters speak OMS rather
+  than DLMS.
+
+key_source: >-
+  Ask your grid operator to activate the customer interface and issue the key.

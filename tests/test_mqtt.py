@@ -125,7 +125,7 @@ class TestDiscoveryPayloads:
         device = discovery.device_payload(tinetz, "1SAG123", "1SAG123")
         assert device["identifiers"] == ["1SAG123"]
         assert device["serial_number"] == "1SAG123"
-        assert device["manufacturer"] == "Sagemcom"
+        assert device["manufacturer"] == "Kaifa"
 
     def test_a_device_name_can_be_overridden(self, tinetz):
         device = discovery.device_payload(tinetz, "n", "1SAG123", "Cellar meter")

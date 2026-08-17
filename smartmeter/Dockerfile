@@ -5,7 +5,7 @@
 FROM ghcr.io/home-assistant/base-python:3.12-alpine3.23-2026.06.1
 
 ARG BUILD_ARCH=amd64
-ARG BUILD_VERSION=0.1.0
+ARG BUILD_VERSION=0.2.0
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -25,7 +25,7 @@ RUN chmod a+x /run.sh
 
 LABEL \
     io.hass.name="Austrian Smart Meter" \
-    io.hass.description="Reads the M-Bus customer interface of an Austrian smart meter" \
+    io.hass.description="Reads the customer interface of an Austrian smart meter" \
     io.hass.type="app" \
     io.hass.arch="${BUILD_ARCH}" \
     io.hass.version="${BUILD_VERSION}" \

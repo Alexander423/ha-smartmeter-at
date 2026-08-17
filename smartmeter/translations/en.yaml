@@ -4,26 +4,32 @@ configuration:
     name: Grid operator
     description: >-
       Your Netzbetreiber, which is the company that owns the meter, not the
-      company that bills you for electricity. Only TINETZ and Salzburg Netz are
-      transcribed from an operator document; the others are inferred from the
-      shared specification and may need adjusting. Choose Generic if yours is
-      not listed.
+      company that bills you for electricity. This also decides which cable you
+      need: the western operators and Netz NOE use M-Bus, the Styrian and
+      Carinthian ones use a P1 cable, and Wiener Netze uses an infrared read
+      head. Netz Oberoesterreich, Linz Netz and Energie Klagenfurt are listed
+      only to explain that their meters cannot be read by this add-on.
   port:
-    name: M-Bus adapter
+    name: Adapter
     description: >-
-      The serial device the adapter appears as. If the list is empty the
-      adapter is not plugged in, or it is a plain USB serial cable rather than
-      an M-Bus slave module.
+      The serial device your adapter appears as. If the list is empty the
+      adapter is not plugged in or was not recognised. Make sure it is the right
+      kind for your operator: an M-Bus slave module, a P1 cable or an infrared
+      read head are not interchangeable.
   key:
     name: Encryption key
     description: >-
-      The 32 hexadecimal characters your grid operator sent you. Paste it, do
-      not type it. It never leaves this add-on and is never written to the log.
+      The 32 hexadecimal characters your grid operator sent you. If you were
+      given two keys, this is the GUEK, the global unicast encryption key. Paste
+      it, do not type it. It never leaves this add-on and is never written to
+      the log.
   auth_key:
     name: Authentication key
     description: >-
-      Only fill this in if your operator issued a second key. Almost none do.
-      With it, every telegram is checked for authenticity as well as decrypted.
+      The second key, if your operator issued one. The P1 operators do: their
+      portal shows a GUEK and a GAK, and the GAK goes here. With it, every
+      telegram is checked for authenticity as well as decrypted. Leave it empty
+      otherwise.
   min_publish_interval:
     name: Minimum seconds between updates
     description: >-

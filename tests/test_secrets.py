@@ -7,7 +7,7 @@ import logging
 from conftest import TEST_KEY_HEX
 from ha_smartmeter.capture import FrameCapture
 from ha_smartmeter.logging_setup import REDACTED, configure, redact
-from ha_smartmeter.mbus.frame import build_frame, parse_frame
+from ha_smartmeter.mbus.frame import build_frame
 from ha_smartmeter.status import Status
 
 SECRETS = (TEST_KEY_HEX,)
@@ -41,10 +41,13 @@ class TestLogRedaction:
         assert redact("the meter is on", ("me",)) == "the meter is on"
 
 
+FRAME = build_frame(0x53, 0xFF, 0x10, b"\x01\x67\xdb\x08")
+
+
 class TestCaptureRedaction:
     def test_a_capture_file_contains_no_key(self, tmp_path):
         capture = FrameCapture(tmp_path, secrets=SECRETS, header=f"key: {TEST_KEY_HEX}")
-        capture.write(parse_frame(build_frame(0x53, 0xFF, 0x10, b"\x01\x67\xdb\x08")))
+        capture.write(FRAME)
         capture.close()
         text = capture.path.read_text(encoding="utf-8")
         assert TEST_KEY_HEX not in text
@@ -53,28 +56,25 @@ class TestCaptureRedaction:
     def test_the_capture_is_a_replayable_hex_file(self, tmp_path):
         from ha_smartmeter.transport.replay_source import parse_hex_file
 
-        frame = build_frame(0x53, 0xFF, 0x10, b"\x01\x67\xdb\x08")
         capture = FrameCapture(tmp_path, secrets=SECRETS)
-        capture.write(parse_frame(frame))
+        capture.write(FRAME)
         capture.close()
-        assert parse_hex_file(capture.path.read_text(encoding="utf-8")) == [frame]
+        assert parse_hex_file(capture.path.read_text(encoding="utf-8")) == [FRAME]
 
     def test_capture_stops_on_its_own(self, tmp_path, caplog):
-        frame = parse_frame(build_frame(0x53, 0xFF, 0x10, b"\x01\x67\xdb\x08"))
         capture = FrameCapture(tmp_path, max_frames=3)
         with caplog.at_level(logging.INFO):
             for _ in range(10):
-                capture.write(frame)
+                capture.write(FRAME)
         assert capture.frames_written == 3
         assert capture.finished
         assert "stopped after 3 frames" in capture.path.read_text(encoding="utf-8")
 
     def test_writing_after_the_limit_does_not_raise(self, tmp_path):
         capture = FrameCapture(tmp_path, max_frames=1)
-        frame = parse_frame(build_frame(0x53, 0xFF, 0x10, b"\x01\x67\xdb\x08"))
-        capture.write(frame)
-        capture.write(frame)
-        capture.write(frame)  # would be a closed-file write if the guard were missing
+        capture.write(FRAME)
+        capture.write(FRAME)
+        capture.write(FRAME)  # would be a closed-file write if the guard were missing
 
     def test_close_is_idempotent(self, tmp_path):
         capture = FrameCapture(tmp_path)

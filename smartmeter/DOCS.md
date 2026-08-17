@@ -1,18 +1,50 @@
 # Austrian Smart Meter
 
-This add-on reads the M-Bus customer interface on the front of an Austrian smart
-meter, decrypts the telegram with the key your grid operator gave you, and
-publishes the values to Home Assistant over MQTT. The meter pushes a telegram
-every five seconds; nothing polls it.
+This add-on reads the customer interface of an Austrian smart meter, decrypts
+the telegram with the key your grid operator gave you, and publishes the values
+to Home Assistant over MQTT. The meter pushes a telegram every five seconds;
+nothing polls it.
+
+## Which interface do you have
+
+Austria has five customer interfaces and your grid operator decides which one
+you get. The meter model does not tell you: the same Sagemcom family is M-Bus at
+Netz NÖ and P1 in Styria, and the same Siemens IM350 is P1 in Carinthia and
+infrared in Vienna. Find your operator, then buy the adapter.
+
+| Operator | Interface | You need |
+|---|---|---|
+| TINETZ, Salzburg Netz, IKB, Vorarlberger Energienetze | M-Bus | M-Bus **slave** adapter, USB |
+| Netz NÖ, Netz Burgenland, Stadtwerke Klagenfurt | M-Bus | M-Bus **slave** adapter, USB |
+| Energienetze Steiermark, Energienetze Graz, Feistritzwerke | P1 | USB P1 cable (DSMR) |
+| Kärnten Netz | P1 | USB P1 cable (DSMR) |
+| Wiener Netze | Infrared | Magnetic IR read head, USB |
+| Netz Oberösterreich | OMS over infrared | Nothing: see below |
+| Linz Netz, Energie Klagenfurt | MEP or wireless M-Bus | Nothing: see below |
+
+### The three operators that cannot work
+
+Netz Oberösterreich runs AMIS with Siemens TD-3511 meters. The read head is the
+same kind Vienna uses, but the data is OMS over M-Bus with AES-128 in CBC mode,
+not DLMS. This add-on has no OMS decoder. The `amis_smartmeter_reader` and
+`AMIS-Leser` projects do read these.
+
+Linz Netz and Energie Klagenfurt run NES MTR1000/3000 meters. Generation 3 uses
+the MEP expansion port speaking ANSI C12.19, on a connector unlike anything
+here; generation 4 uses wireless M-Bus and needs an 868 MHz radio.
+
+All three are in the operator list so that selecting one gives you this
+explanation instead of a device dropdown and a long silence.
 
 ## What you need
 
-- An M-Bus **slave** adapter with a USB connection. The meter supplies the bus
-  voltage, so a master adapter will not work and a plain USB serial cable will
-  not work either.
-- An RJ12 (6P6C) cable to reach the socket on the meter.
+- The adapter for your interface from the table above. They are not
+  interchangeable, and plugging the wrong one in produces no error, just
+  nothing.
+- For M-Bus and P1, an RJ12 (6P6C) cable to reach the socket on the meter.
+  Infrared needs no cable to the meter.
 - The encryption key from your grid operator. You have to ask for it; it is not
-  printed on the meter.
+  printed on the meter. The P1 operators issue two keys.
 - An MQTT broker. The Mosquitto broker add-on is the usual choice, and this
   add-on picks up its address and credentials on its own.
 
@@ -26,27 +58,36 @@ not this one.
 
 ## Wiring
 
-The RJ12 socket has six positions. Only two are used.
+The same RJ12 socket is wired two different ways depending on the operator.
 
 ```
-   RJ12 socket, looking at the meter, latch downwards
+   RJ12 6P6C socket, looking at the meter, latch downwards
 
     1   2   3   4   5   6
    ___ ___ ___ ___ ___ ___
-  |   |   |   | * |   |   |
-  |   |   | * |   |   |   |
+  |   |   |   |   |   |   |
    -----------------------
-              |   |
-              |   +--- pin 4  MBUS-
-              +------- pin 3  MBUS+
 
-  pins 1, 2, 5 and 6 are not connected
+   M-Bus operators          P1 operators (DSMR)
+   1  not connected         1  +5V
+   2  not connected         2  Data Request
+   3  MBUS+                 3  Data Ground
+   4  MBUS-                 4  not connected
+   5  not connected         5  Data
+   6  not connected         6  Power Ground
 ```
 
-M-Bus is not polarity sensitive in practice, but wire it the right way round
-anyway. Take the power for the adapter from the USB side: the meter supplies at
-most 6 mA, which is four M-Bus loads, and an adapter that draws its power from
-the bus will brown out.
+For M-Bus: it is not polarity sensitive in practice, but wire it the right way
+round anyway. Take the power for the adapter from the USB side, because the
+meter supplies at most 6 mA, which is four M-Bus loads, and an adapter drawing
+its power from the bus will brown out.
+
+For P1: the meter only sends while pin 2 is held high. Most cables tie it to the
++5V on pin 1. If yours does not, the add-on raises DTR and RTS on opening the
+port, which covers the cables that expect that instead.
+
+Wiener Netze has nothing to wire. The customer interface is the optical port on
+the front of the meter and the read head holds itself on with a magnet.
 
 ## Installing
 
@@ -74,27 +115,37 @@ Every operator issues the key on request and most send it by post. There is
 usually a form or a portal setting called something like
 "Kundenschnittstelle aktivieren".
 
-| Operator | Where to ask |
-|---|---|
-| TINETZ | Customer portal, then the key arrives by post |
-| Salzburg Netz | Customer portal |
-| IKB | Customer service |
-| Vorarlberger Energienetze | Customer service |
-| EVN / Netz NOE | smartmeter.netz-noe.at |
-| Kaernten Netz | Customer service |
+| Operator | Where to ask | Keys |
+|---|---|---|
+| TINETZ | Customer portal, then by post | 1 |
+| Salzburg Netz | Customer portal | 1 |
+| IKB | Customer service | 1 |
+| Vorarlberger Energienetze | Customer service | 1 |
+| Netz NÖ | smartmeter.netz-noe.at | 1 |
+| Netz Burgenland | Request activation | 1 |
+| Energienetze Steiermark | Portal at e-netze.at | 2 |
+| Energienetze Graz, Feistritzwerke | Customer service | 2 |
+| Kärnten Netz | +43 50 525 6000 | 2 |
+| Stadtwerke Klagenfurt | Customer service | 1 |
+| Wiener Netze | Portal: Details, then Show Key | 1 |
 
-Expect a wait of one to three weeks. The interface itself often has to be
-enabled at the meter as well, which some operators do remotely and some do on a
-site visit.
+Expect a wait of one to three weeks, except at Wiener Netze where the key is on
+screen straight away. The interface itself often has to be enabled at the meter
+as well, which some operators do remotely and some do on a site visit.
+
+Where two keys are issued, the portal calls them GUEK (global unicast encryption
+key) and GAK (global authentication key). The GUEK goes in `key` and the GAK in
+`auth_key`. At Energienetze Steiermark they are well hidden in the portal, and
+activation needs a meter in the "IME Opt-In" or "IMS Standard" configuration.
 
 ## Options
 
 | Option | Default | What it does |
 |---|---|---|
-| `supplier` | `tinetz` | Which operator profile to use. See the table in the README for how much each one is worth trusting. |
+| `supplier` | `tinetz` | Which operator profile to use. This also decides the interface, the serial settings and which adapter you need. See the README for how much each one is worth trusting. |
 | `port` | none | The serial device the adapter appears as. |
-| `key` | none | The 32 character key from your operator. |
-| `auth_key` | empty | A second key, only if your operator issued one. Almost none do. |
+| `key` | none | The 32 character key from your operator, the GUEK where two are issued. |
+| `auth_key` | empty | The second key, where your operator issues one. The P1 operators do. |
 | `min_publish_interval` | `0` | Minimum seconds between MQTT updates. See below. |
 | `stale_after` | `30` | Seconds without a telegram before entities go unavailable. |
 | `capture_raw` | `false` | Write received frames to `/config/captures`. |
@@ -169,12 +220,26 @@ again. Choosing the entry under `/dev/serial/by-id/` instead of `/dev/ttyUSB0`
 avoids this permanently, if your host offers one.
 
 **Nothing at all arrives: the frame counter on the status page stays at zero.**
-Either the interface is not enabled at the meter, or the wiring is wrong, or the
-adapter is a master rather than a slave. The customer interface has to be
-switched on by the operator; on many meters an LED near the RJ12 socket blinks
-when it is pushing data. If the log shows bytes being discarded rather than
-nothing at all, the wiring is fine and the serial settings are wrong, which
-should not happen at 2400 8E1 but would explain it.
+First check that the adapter matches your operator's interface. An M-Bus slave
+adapter, a P1 cable and an infrared read head all appear as serial devices and
+none of them reads another's interface, so the wrong one gives exactly this: no
+error, no bytes. After that: the customer interface may not be switched on at
+the meter, the wiring may be wrong, or an M-Bus adapter may be a master rather
+than a slave. On many meters an LED near the socket blinks when it is pushing
+data. If the log shows bytes being discarded rather than nothing at all, then
+bytes are arriving and the framing does not match, which usually means the wrong
+operator profile is selected.
+
+**Nothing arrives on a P1 cable.**
+P1 meters send only while the Data Request line on pin 2 is high. Most cables
+tie it to +5V on pin 1; the add-on also raises DTR and RTS for the cables that
+expect that. A cable that does neither will stay silent for ever with nothing in
+the log to explain it.
+
+**The log says the meter is sending readable DSMR text telegrams.**
+The P1 interface is running in an older unencrypted mode. This add-on reads the
+encrypted DLMS form. Ask your operator to enable the encrypted interface, or
+open an issue with a capture.
 
 **Frames arrive but nothing decodes, and the log says the key is wrong.**
 That is almost always exactly what it is. Check for a transposed character, and

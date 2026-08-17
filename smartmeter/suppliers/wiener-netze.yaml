@@ -1,0 +1,46 @@
+# Wiener Netze
+#
+# The only Austrian operator whose customer interface is optical. All three of
+# its meter families (Siemens IM150/350, Iskraemeco AM550, Landis+Gyr E450s4)
+# are listed with IR in the Oesterreichs Energie overview, and Wiener Netze's
+# own documentation says the customer interface is an infrared interface.
+#
+# The framing is DLMS over HDLC rather than M-Bus: 9600 8N1, frames delimited by
+# 0x7E with a CRC-16/X.25 check sequence, an LLC header, and then the same
+# general-glo-ciphering APDU as everywhere else. Transcribed from the
+# esphome-wienernetze-smartmeter component, which reads these meters.
+#
+# One key, not two, and it is on screen rather than in the post.
+name: Wiener Netze
+status: assumed
+regions: [Wien, Niederoesterreich, Burgenland]
+interface: hdlc
+manufacturer: Siemens / Iskraemeco / Landis+Gyr
+model: IM150, IM350, IM351, AM550 or E450s4
+
+tsap: null
+reassembly_timeout: 15.0
+
+security_control: 0x21
+header_order: auto
+
+layout: obis_tagged
+
+expected_obis:
+  - "0-0:1.0.0.255"
+  - "0-0:96.1.0.255"
+  - "1-0:1.7.0.255"
+  - "1-0:2.7.0.255"
+  - "1-0:1.8.0.255"
+  - "1-0:2.8.0.255"
+
+notes: >-
+  This is an optical interface. It needs a magnetic infrared read head on the
+  meter's optical port, not an M-Bus adapter and not a P1 cable. Wiener Netze
+  also supplies parts of Lower Austria and Burgenland, so check the name on your
+  bill rather than the Bundesland.
+
+key_source: >-
+  In the Wiener Netze Smart Meter portal, open Details under your metering
+  point, then Show Key under Kundenschnittstelle. Unlike most operators the key
+  is shown on screen straight away.

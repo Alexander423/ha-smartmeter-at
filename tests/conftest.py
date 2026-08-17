@@ -29,7 +29,7 @@ def tinetz():
 
 @pytest.fixture
 def generic():
-    return suppliers.get("generic-ksm-west")
+    return suppliers.get("generic-mbus")
 
 
 @pytest.fixture

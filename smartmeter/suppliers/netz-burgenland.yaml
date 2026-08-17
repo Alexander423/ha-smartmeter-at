@@ -1,0 +1,38 @@
+# Netz Burgenland
+#
+# The Oesterreichs Energie overview lists Netz Burgenland with the Landis+Gyr
+# E450 on M-Bus. A different meter from the Kaifa the western operators use, but
+# the same wired M-Bus interface, so the same adapter and the same framing.
+name: Netz Burgenland
+status: assumed
+regions: [Burgenland]
+interface: mbus
+manufacturer: Landis+Gyr
+model: E450
+
+tsap: auto
+reassembly_timeout: 15.0
+
+security_control: 0x21
+header_order: auto
+
+layout: obis_tagged
+
+expected_obis:
+  - "0-0:1.0.0.255"
+  - "0-0:96.1.0.255"
+  - "1-0:32.7.0.255"
+  - "1-0:31.7.0.255"
+  - "1-0:1.7.0.255"
+  - "1-0:2.7.0.255"
+  - "1-0:1.8.0.255"
+  - "1-0:2.8.0.255"
+
+notes: >-
+  Different meter to the western operators, so everything except the physical
+  interface is detected from the first telegram. Parts of Burgenland are
+  supplied by Wiener Netze instead, whose meters use an infrared interface.
+
+key_source: >-
+  Request activation of the customer interface from Netz Burgenland. They
+  activate the RJ12 interface and issue the key.

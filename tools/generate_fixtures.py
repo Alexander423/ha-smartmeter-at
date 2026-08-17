@@ -91,6 +91,47 @@ def main() -> None:
         MeterSimulator(key=TEST_KEY, frame_counter=4714, three_phase=False, tsap=None),
     )
 
+    write(
+        "sim-p1.hex",
+        """
+# Synthetic. Produced by tools/generate_fixtures.py, not captured from a meter.
+#
+# The DSMR P1 interface used by Energienetze Steiermark and Kaernten Netz: no
+# link layer at all, just the DLMS ciphering APDU on the line at 115200 8N1.
+# Security control 0x30, so the telegram is authenticated as well as encrypted
+# and the 12 byte GCM tag is on the wire. Both keys are the test key here; a
+# real meter has a separate GUEK and GAK.
+#
+# One line, because one telegram is one APDU on this interface however long it
+# gets.
+""",
+        MeterSimulator(
+            key=TEST_KEY,
+            frame_counter=4715,
+            interface="p1",
+            security_control=0x30,
+        ),
+    )
+
+    write(
+        "sim-hdlc.hex",
+        """
+# Synthetic. Produced by tools/generate_fixtures.py, not captured from a meter.
+#
+# The infrared interface used by Wiener Netze: DLMS over HDLC at 9600 8N1.
+# Frames run between 0x7E flags with a CRC-16/X.25 check sequence, the LLC
+# header E6 E7 00 sits at the front of the first segment, and the telegram is
+# split across several frames using the segmentation bit in the frame format
+# field.
+""",
+        MeterSimulator(
+            key=TEST_KEY,
+            frame_counter=4716,
+            interface="hdlc",
+            max_hdlc_info=128,
+        ),
+    )
+
 
 if __name__ == "__main__":
     main()

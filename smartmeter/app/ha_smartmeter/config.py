@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import Any
 
 from .dlms.crypto import parse_key
-from .errors import ConfigError
+from .errors import ConfigError, ProfileError
 from .suppliers import SupplierProfile
 from .suppliers import get as get_profile
 
@@ -135,9 +135,15 @@ class Options:
     def validate(self) -> None:
         # Reading these three is the validation. Each raises a ConfigError that
         # already says what the user should do about it.
-        _profile = self.profile
+        profile = self.profile
         _key = self.encryption_key
         _auth_key = self.authentication_key
+
+        if not profile.supported:
+            raise ProfileError(
+                f"{profile.name} uses the {profile.interface} interface, which does not carry DLMS",
+                hint=profile.unsupported_hint(),
+            )
 
         if self.log_level not in LOG_LEVELS:
             raise ConfigError(
@@ -155,11 +161,18 @@ class Options:
                 hint="30 is a good value: it is six missed telegrams.",
             )
         if not self.replay_file and not self.port:
+            adapter = {
+                "mbus": "M-Bus slave adapter",
+                "p1": "USB P1 cable",
+                "hdlc": "infrared read head",
+            }.get(profile.interface, "adapter")
             raise ConfigError(
                 "no serial device selected",
                 hint=(
-                    "Open the add-on configuration and pick your M-Bus adapter from the "
-                    "Device list. If the list is empty, the adapter is not plugged in."
+                    f"Open the add-on configuration and pick your {adapter} from the "
+                    f"Device list. {profile.name} uses the {profile.interface} interface, "
+                    f"so that is the kind of adapter it has to be. If the list is empty, "
+                    "nothing is plugged in."
                 ),
             )
 

@@ -1,0 +1,24 @@
+# Linz Netz
+#
+# This profile exists so the add-on can explain itself rather than fail quietly.
+#
+# Linz Netz runs NES MTR1000/3000 meters. Generation 3.1 and 3.2 expose the
+# Multipurpose Expansion Port, which is a 9600 8N1 serial link speaking ANSI
+# C12.19, not DLMS, on a connector that is nothing like an RJ12. Generation 4
+# moved to wireless M-Bus, which needs an 868 MHz receiver rather than a cable.
+# Neither is something this add-on can read.
+name: Linz Netz (not readable by this add-on)
+status: documented
+regions: [Oberoesterreich]
+interface: mep
+manufacturer: NES
+model: MTR1000 / MTR3000
+
+expected_obis: []
+
+notes: >-
+  Generation 3 uses the MEP port with ANSI C12.19; generation 4 uses wireless
+  M-Bus. Neither carries DLMS.
+
+key_source: >-
+  Not applicable: this add-on cannot read these meters whatever key is issued.

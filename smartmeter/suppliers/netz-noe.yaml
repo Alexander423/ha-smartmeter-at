@@ -1,0 +1,42 @@
+# Netz Niederoesterreich (EVN)
+#
+# The Oesterreichs Energie overview lists Netz NOE with both the Sagemcom
+# T216-D and Kaifa meters, and both on M-Bus. That is worth noticing: the same
+# Sagemcom family is wired as P1 in Styria, so the meter model alone does not
+# tell you the interface, the operator does.
+name: Netz Niederoesterreich (EVN)
+status: assumed
+regions: [Niederoesterreich]
+interface: mbus
+manufacturer: Sagemcom / Kaifa
+model: T216-D, S210, MA309M or MA110M
+
+# Detected rather than assumed, because this operator ships two meter families
+# and they need not agree on the transport header.
+tsap: auto
+reassembly_timeout: 15.0
+
+security_control: 0x21
+header_order: auto
+
+layout: obis_tagged
+
+expected_obis:
+  - "0-0:1.0.0.255"
+  - "0-0:96.1.0.255"
+  - "1-0:32.7.0.255"
+  - "1-0:31.7.0.255"
+  - "1-0:1.7.0.255"
+  - "1-0:2.7.0.255"
+  - "1-0:1.8.0.255"
+  - "1-0:2.8.0.255"
+
+notes: >-
+  Netz NOE installs both Sagemcom and Kaifa meters, so this profile detects the
+  TSAP bytes and the header order from the first telegram rather than assuming
+  them. Parts of Lower Austria are supplied by Wiener Netze instead, whose
+  meters use an infrared interface: check the name on your bill.
+
+key_source: >-
+  Activate the customer interface at smartmeter.netz-noe.at. The key is sent by
+  post.

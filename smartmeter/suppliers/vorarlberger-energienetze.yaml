@@ -1,17 +1,14 @@
-# Vorarlberger Energienetze (VEN)
+# Vorarlberger Energienetze (VEN, formerly VKW Netz)
 #
-# Member of the KSM West cooperation. Same situation as the IKB profile: the
-# shared specification is assumed to apply, but no VEN document was read.
+# Member of the KSM West cooperation. The Oesterreichs Energie overview lists
+# VEN with the Kaifa MA110M and MA309M on M-Bus, and esphome-dlms-meter names
+# Vorarlberger Energienetze among the operators its Kaifa component serves.
 name: Vorarlberger Energienetze
 status: assumed
-manufacturer: Sagemcom
-model: T210-D (M-Bus customer interface)
-
-serial:
-  baudrate: 2400
-  bytesize: 8
-  parity: E
-  stopbits: 1
+regions: [Vorarlberg]
+interface: mbus
+manufacturer: Kaifa
+model: MA309M / MA110M
 
 tsap: [0x01, 0x67]
 reassembly_timeout: 15.0
@@ -32,8 +29,8 @@ expected_obis:
   - "1-0:2.8.0.255"
 
 notes: >-
-  Copied from the TINETZ reference on the strength of the shared KSM West
-  specification. Not checked against a Vorarlberg meter.
+  Meter and interface confirmed from the Oesterreichs Energie overview, frame
+  details copied from the TINETZ reference.
 
 key_source: >-
   Request the customer interface and the key from Vorarlberger Energienetze.

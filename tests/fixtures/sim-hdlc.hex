@@ -1,0 +1,11 @@
+# Synthetic. Produced by tools/generate_fixtures.py, not captured from a meter.
+#
+# The infrared interface used by Wiener Netze: DLMS over HDLC at 9600 8N1.
+# Frames run between 0x7E flags with a CRC-16/X.25 check sequence, the LLC
+# header E6 E7 00 sits at the front of the first segment, and the telegram is
+# split across several frames using the segmentation bit in the frame format
+# field.
+#
+7ea8892103130bfae6e700db08534147010203040582012a210000126c73f78a3bb1d29a322f788bdca524465061fef70dae7d823f834abf5d7a2a96296238585fa12fd27d17797c88b6a68c20688f971744b65c665ad13e85a4e7f523e378ea2dfbed742c9e4a6722a2565ffe68f6247972a416c5e884c24d3d88bafef69df62970a61652d6088b5b827e
+7ea8892103130bfa7bf9c881da0e27b04d83bf5ffe8798e06af580eac3b64c11c85390340667bdf919656cd7dd453dffddb3fbc24d983ddac6b2fc483b9211e0256e0d49c7a6716306c1e6d7188b7dcf2cc98981e5b03b19ade30ab2efaf9fbeb0cd72fcbb330f126692d8c5f06c008fa68a27cc5a57e27e58e343f3025dfc6b63ddceedadd2c5ee35d17e
+7ea0432103135c47e37abb9e81261a803857f9c71e9006b1fe1a04cd0d65d894291d43a58d7c7ff18a5593ce10732d41274adb09d607c9a9cdcafb60e20b0bc412626e7d7e

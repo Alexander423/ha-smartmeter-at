@@ -100,6 +100,21 @@ class TestConfigYaml:
     def test_the_default_supplier_exists(self, config):
         assert config["options"]["supplier"] in suppliers.load_all()
 
+    def test_operators_that_cannot_be_read_are_still_offered(self, config):
+        # Somebody in Upper Austria has to be able to find out why this add-on
+        # will not work for them. Leaving their operator out of the list would
+        # send them looking for a cable that was never going to help.
+        offered = config["schema"]["supplier"]
+        for profile_id in ("netz-ooe", "linz-netz", "energie-klagenfurt"):
+            assert profile_id in offered
+
+    def test_the_dropdown_is_ordered_by_bundesland(self, config):
+        # The list is what a user reads top to bottom while looking for their
+        # own operator, so it is grouped by region rather than alphabetically.
+        offered = re.fullmatch(r"list\((.*)\)", config["schema"]["supplier"].strip())[1].split("|")
+        assert offered[0] == "netz-burgenland"
+        assert offered[-3:] == ["generic-mbus", "generic-p1", "generic-ir"]
+
     def test_the_default_publishes_every_telegram(self, config):
         assert config["options"]["min_publish_interval"] == 0
 

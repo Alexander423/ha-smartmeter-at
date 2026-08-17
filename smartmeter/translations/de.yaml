@@ -4,27 +4,31 @@ configuration:
     name: Netzbetreiber
     description: >-
       Ihr Netzbetreiber, also die Firma, der der Zaehler gehoert, nicht Ihr
-      Stromlieferant. Nur TINETZ und Salzburg Netz sind aus einem Dokument des
-      Betreibers uebernommen; die uebrigen sind aus der gemeinsamen Spezifikation
-      abgeleitet und koennen abweichen. Waehlen Sie Generic, wenn Ihrer fehlt.
+      Stromlieferant. Davon haengt auch das noetige Kabel ab: die westlichen
+      Betreiber und Netz NOE verwenden M-Bus, die steirischen und Kaernten Netz
+      ein P1-Kabel, Wiener Netze einen Infrarot-Lesekopf. Netz Oberoesterreich,
+      Linz Netz und Energie Klagenfurt stehen nur in der Liste, um zu erklaeren,
+      dass ihre Zaehler mit diesem Add-on nicht gelesen werden koennen.
   port:
-    name: M-Bus-Adapter
+    name: Adapter
     description: >-
-      Das serielle Geraet, unter dem der Adapter erscheint. Ist die Liste leer,
-      steckt der Adapter nicht, oder es handelt sich um ein einfaches
-      USB-Seriell-Kabel statt um ein M-Bus-Slave-Modul.
+      Das serielle Geraet, unter dem Ihr Adapter erscheint. Ist die Liste leer,
+      steckt der Adapter nicht oder wurde nicht erkannt. Achten Sie auf den
+      richtigen Typ: M-Bus-Slave-Modul, P1-Kabel und Infrarot-Lesekopf sind
+      nicht austauschbar.
   key:
     name: Schluessel
     description: >-
-      Die 32 Zeichen, die Sie von Ihrem Netzbetreiber erhalten haben. Kopieren
-      Sie ihn, tippen Sie ihn nicht ab. Er verlaesst dieses Add-on nicht und
-      wird nie ins Protokoll geschrieben.
+      Die 32 Zeichen, die Sie von Ihrem Netzbetreiber erhalten haben. Bei zwei
+      Schluesseln ist das der GUEK. Kopieren Sie ihn, tippen Sie ihn nicht ab.
+      Er verlaesst dieses Add-on nicht und wird nie ins Protokoll geschrieben.
   auth_key:
     name: Authentifizierungsschluessel
     description: >-
-      Nur ausfuellen, wenn Ihr Netzbetreiber einen zweiten Schluessel ausgegeben
-      hat. Das tun die wenigsten. Damit wird jedes Telegramm zusaetzlich auf
-      Echtheit geprueft.
+      Der zweite Schluessel, sofern Ihr Netzbetreiber einen ausgibt. Bei den
+      P1-Betreibern ist das so: im Portal stehen ein GUEK und ein GAK, hier
+      gehoert der GAK hinein. Damit wird jedes Telegramm zusaetzlich auf
+      Echtheit geprueft. Sonst leer lassen.
   min_publish_interval:
     name: Mindestabstand zwischen Aktualisierungen in Sekunden
     description: >-

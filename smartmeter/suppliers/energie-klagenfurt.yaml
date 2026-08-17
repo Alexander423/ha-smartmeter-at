@@ -1,0 +1,23 @@
+# Energie Klagenfurt
+#
+# This profile exists so the add-on can explain itself rather than fail quietly.
+#
+# Energie Klagenfurt runs NES MTR1000/3000 meters on the Multipurpose Expansion
+# Port, the same arrangement as Linz Netz: 9600 8N1 carrying ANSI C12.19 rather
+# than DLMS. Not to be confused with Stadtwerke Klagenfurt, which uses the
+# Landis+Gyr E450 on wired M-Bus and does work.
+name: Energie Klagenfurt (not readable by this add-on)
+status: documented
+regions: [Kaernten]
+interface: mep
+manufacturer: NES
+model: MTR1000 / MTR3000
+
+expected_obis: []
+
+notes: >-
+  If your meter is a Landis+Gyr E450 rather than an NES, you are with
+  Stadtwerke Klagenfurt and that profile will work.
+
+key_source: >-
+  Not applicable: this add-on cannot read these meters whatever key is issued.

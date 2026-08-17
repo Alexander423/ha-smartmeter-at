@@ -1,40 +1,39 @@
-# Kaernten Netz
+# Kaernten Netz (KNG)
 #
-# Same meter family as the other Austrian operators. No document has been read
-# and no capture has been seen, so everything here is the KSM West default with
-# automatic detection switched on where it is cheap.
-name: Kaernten Netz
+# The Oesterreichs Energie overview lists KNG with the Iskraemeco AM550E/AM550T
+# and the Siemens IM150/350, both on P1. Note that the same Siemens IM350 is
+# wired as infrared at Wiener Netze, so choosing by meter model rather than by
+# operator would get this wrong.
+name: Kaernten Netz (KNG)
 status: assumed
-manufacturer: Unknown
-model: Smart meter (M-Bus customer interface)
+regions: [Kaernten]
+interface: p1
+manufacturer: Iskraemeco / Siemens
+model: AM550E, AM550T, IM150 or IM350
 
-serial:
-  baudrate: 2400
-  bytesize: 8
-  parity: E
-  stopbits: 1
-
-tsap: auto
+tsap: null
 reassembly_timeout: 15.0
 
-security_control: 0x21
+# Detected, because two quite different meter families are in play here.
+security_control: 0x30
 header_order: auto
+auth_key_expected: true
 
 layout: obis_tagged
 
 expected_obis:
   - "0-0:1.0.0.255"
   - "0-0:96.1.0.255"
-  - "1-0:32.7.0.255"
-  - "1-0:31.7.0.255"
   - "1-0:1.7.0.255"
   - "1-0:2.7.0.255"
   - "1-0:1.8.0.255"
   - "1-0:2.8.0.255"
 
 notes: >-
-  Nothing in this profile has been confirmed for Kaernten Netz. It is the
-  generic profile with a name on it.
+  Needs a USB P1 cable, not an M-Bus adapter. Two meter families are in use and
+  neither has been tested, so if this does not decode, try the generic P1
+  profile and send a capture.
 
 key_source: >-
-  Request the customer interface and the key from Kaernten Netz.
+  Ring Kaernten Netz customer service on +43 50 525 6000 to have the customer
+  interface activated and the key issued.

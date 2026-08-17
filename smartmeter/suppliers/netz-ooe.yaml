@@ -1,0 +1,28 @@
+# Netz Oberoesterreich
+#
+# This profile exists so the add-on can explain itself rather than sit there
+# receiving bytes it will never decode.
+#
+# Netz OOE runs the AMIS system with Siemens TD-3510/11/12 meters. The customer
+# interface is optical, and what comes out of it is OMS 3.0.1 over M-Bus with
+# AES-128 in CBC mode, not DLMS/COSEM. Same read head, same 9600 baud, entirely
+# different application layer and a different cipher mode, so none of the
+# decoding in this add-on applies. The single AES key the operator issues is an
+# OMS key, not a DLMS one.
+name: Netz Oberoesterreich (not readable by this add-on)
+status: documented
+regions: [Oberoesterreich]
+interface: oms-ir
+manufacturer: Siemens
+model: TD-3510, TD-3511, TD-3512 (AMIS)
+
+expected_obis: []
+
+notes: >-
+  Reading these meters needs an OMS decoder, which this add-on does not have.
+  The amis_smartmeter_reader and AMIS-Leser projects do read them; both are
+  listed in the README.
+
+key_source: >-
+  Netz Oberoesterreich issues a 32 character AMIS key on request, but this
+  add-on cannot use it.

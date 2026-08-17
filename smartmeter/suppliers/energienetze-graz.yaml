@@ -1,0 +1,37 @@
+# Energienetze Graz
+#
+# Listed alongside Energienetze Steiermark in the Oesterreichs Energie overview,
+# with the same Sagemcom meters on the same P1 interface. No Graz document has
+# been read, so this is the Steiermark profile with a different name.
+name: Energienetze Graz
+status: assumed
+regions: [Steiermark]
+interface: p1
+manufacturer: Sagemcom
+model: T216-D / S210
+
+tsap: null
+reassembly_timeout: 15.0
+
+security_control: 0x30
+header_order: auto
+auth_key_expected: true
+
+layout: obis_tagged
+
+expected_obis:
+  - "0-0:1.0.0.255"
+  - "0-0:96.1.0.255"
+  - "1-0:1.7.0.255"
+  - "1-0:2.7.0.255"
+  - "1-0:1.8.0.255"
+  - "1-0:2.8.0.255"
+
+notes: >-
+  Needs a USB P1 cable, not an M-Bus adapter. Copied from the Energienetze
+  Steiermark profile because the two are listed together with the same meters
+  and the same interface.
+
+key_source: >-
+  Request activation of the customer interface from Energienetze Graz. Expect
+  two keys, an encryption key and an authentication key.

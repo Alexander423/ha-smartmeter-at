@@ -21,11 +21,19 @@ from .dlms import axdr
 from .dlms.apdu import build_ciphered_apdu
 from .dlms.axdr import Node, Tag
 from .dlms.crypto import encrypt
+from .framing.hdlc_framer import FLAG, FORMAT_TYPE_3, LLC_FROM_SERVER, SEGMENTATION_BIT, crc16_x25
 from .mbus.frame import MAX_DLMS_PER_FRAME, build_frame
 from .obis import BY_KEY, parse_obis
 
 C_FIELD_SND_UD = 0x53
 A_FIELD_BROADCAST = 0xFF
+
+#: HDLC addresses as a meter pushing to a client uses them: client 16 and
+#: server 1, each shifted left with bit 0 marking the last byte.
+HDLC_DEST = 0x21
+HDLC_SRC = 0x03
+#: Unnumbered information frame with the poll/final bit set.
+HDLC_CONTROL = 0x13
 
 #: DLMS unit enum values for the register form.
 _UNIT_ENUM = {"V": 35, "A": 33, "W": 27, "Wh": 30, "varh": 32}
@@ -56,12 +64,17 @@ class MeterSimulator:
     meter_number: str = "1SAG1234567890"
     logical_device_name: str = "SAG0000000000"
     three_phase: bool = True
+    #: "mbus", "p1" or "hdlc". Decides the link layer wrapped around the APDU.
+    interface: str = "mbus"
     security_control: int = 0x21
     auth_key: bytes | None = None
     tsap: tuple[int, int] | None = (0x01, 0x67)
     frame_counter: int = 1
     #: Lowered in tests to force segmentation with a short telegram.
     max_dlms_per_frame: int = MAX_DLMS_PER_FRAME
+    #: Information field size for the HDLC interface. Real meters negotiate
+    #: something around this, so telegrams segment there too.
+    max_hdlc_info: int = 128
     values: dict[str, float] = field(default_factory=lambda: dict(DEFAULT_VALUES))
 
     # ------------------------------------------------------------------ layers
@@ -118,8 +131,21 @@ class MeterSimulator:
         )
 
     def build_frames(self, plaintext: bytes | None = None) -> list[bytes]:
-        """Complete M-Bus frames, ready to be written to a serial line."""
+        """Complete link-layer frames, ready to be written to a serial line.
+
+        Which wrapper goes around the APDU depends on `interface`, exactly as it
+        does for a real meter: M-Bus long frames for the western operators, no
+        wrapper at all for P1, HDLC for the optical interface.
+        """
         apdu = self.build_apdu(plaintext)
+        if self.interface == "p1":
+            # P1 has no link layer. The APDU delimits itself and that is all.
+            return [apdu]
+        if self.interface == "hdlc":
+            return self._build_hdlc_frames(apdu)
+        return self._build_mbus_frames(apdu)
+
+    def _build_mbus_frames(self, apdu: bytes) -> list[bytes]:
         chunks = _chunk(apdu, self.max_dlms_per_frame)
         prefix = bytes(self.tsap) if self.tsap else b""
         frames = []
@@ -128,6 +154,14 @@ class MeterSimulator:
             ci = (0x10 if final else 0x00) | (index & 0x0F)
             frames.append(build_frame(C_FIELD_SND_UD, A_FIELD_BROADCAST, ci, prefix + chunk))
         return frames
+
+    def _build_hdlc_frames(self, apdu: bytes) -> list[bytes]:
+        """The LLC header goes on the first segment only, as on the wire."""
+        chunks = _chunk(LLC_FROM_SERVER + apdu, self.max_hdlc_info)
+        return [
+            build_hdlc_frame(chunk, segmented=index < len(chunks) - 1)
+            for index, chunk in enumerate(chunks)
+        ]
 
     def next_telegram(self, plaintext: bytes | None = None) -> bytes:
         """One push interval worth of bytes, then advance the frame counter."""
@@ -156,6 +190,29 @@ def _register(value: float, unit: str) -> Node:
             Node(Tag.STRUCTURE, [Node(Tag.INT8, scaler), Node(Tag.ENUM, _UNIT_ENUM[unit])]),
         ],
     )
+
+
+def build_hdlc_frame(info: bytes, segmented: bool = False) -> bytes:
+    """One HDLC type 3 frame around an information field.
+
+    The length field counts the format field through the FCS, so it is nine
+    bytes of header and check sequences plus the information itself.
+    """
+    length = 9 + len(info)
+    if length > 0x7FF:
+        raise ValueError(f"HDLC frame of {length} bytes exceeds the 11 bit length field")
+    header = bytes(
+        [
+            FORMAT_TYPE_3 | (SEGMENTATION_BIT if segmented else 0) | (length >> 8),
+            length & 0xFF,
+            HDLC_DEST,
+            HDLC_SRC,
+            HDLC_CONTROL,
+        ]
+    )
+    header += crc16_x25(header).to_bytes(2, "little")
+    body = header + info
+    return bytes([FLAG]) + body + crc16_x25(body).to_bytes(2, "little") + bytes([FLAG])
 
 
 def _chunk(data: bytes, size: int) -> list[bytes]:

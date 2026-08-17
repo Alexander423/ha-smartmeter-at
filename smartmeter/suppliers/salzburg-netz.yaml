@@ -1,18 +1,15 @@
 # Salzburg Netz
 #
-# Salzburg Netz publishes its own "Technische Beschreibung Kundenschnittstelle"
-# with the same content as the TINETZ document, both being part of the KSM West
-# cooperation. Frame layout, TSAPs, baud rate and security control byte match.
+# Salzburg Netz publishes its own "Smart Meter Detailbeschreibung" with the same
+# customer interface as the TINETZ document, both being part of KSM West. The
+# Oesterreichs Energie overview lists Salzburg Netz with the Kaifa MA110M and
+# MA309M on M-Bus.
 name: Salzburg Netz
 status: documented
-manufacturer: Sagemcom
-model: T210-D (M-Bus customer interface)
-
-serial:
-  baudrate: 2400
-  bytesize: 8
-  parity: E
-  stopbits: 1
+regions: [Salzburg]
+interface: mbus
+manufacturer: Kaifa
+model: MA309M / MA110M
 
 tsap: [0x01, 0x67]
 reassembly_timeout: 15.0
@@ -38,6 +35,11 @@ expected_obis:
   - "1-0:2.8.0.255"
   - "1-0:3.8.0.255"
   - "1-0:4.8.0.255"
+
+notes: >-
+  Salzburg Netz also installs Honeywell meters in some places. Those use the P1
+  interface instead and will not work with this profile: choose the generic P1
+  profile and an appropriate cable.
 
 key_source: >-
   Order the customer interface in the Salzburg Netz portal. The key is sent by

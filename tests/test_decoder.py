@@ -69,7 +69,9 @@ class TestEndToEnd:
         decoder = Decoder(profile=tinetz, key=TEST_KEY, on_frame=seen.append)
         decoder.feed(sim.next_telegram())
         assert len(seen) == len(sim.build_frames())
-        assert all(f.raw.startswith(b"\x68") for f in seen)
+        # What the hook gets has to be the bytes as they arrived, because that
+        # is what a capture file is for.
+        assert all(raw.startswith(b"\x68") and raw.endswith(b"\x16") for raw in seen)
 
 
 class TestWrongKey:
@@ -100,13 +102,13 @@ class TestProfileDetection:
     def test_the_generic_profile_reads_a_tinetz_telegram(self, generic, sim):
         decoder = Decoder(profile=generic, key=TEST_KEY)
         assert len(decoder.feed(sim.next_telegram())) == 1
-        assert decoder.reassembler.resolved_tsap == (0x01, 0x67)
+        assert decoder.framer.resolved_tsap == (0x01, 0x67)
 
     def test_the_generic_profile_reads_a_meter_without_tsap_bytes(self, generic):
         sim = MeterSimulator(key=TEST_KEY, tsap=None, three_phase=False)
         decoder = Decoder(profile=generic, key=TEST_KEY)
         assert len(decoder.feed(sim.next_telegram())) == 1
-        assert decoder.reassembler.resolved_tsap is None
+        assert decoder.framer.resolved_tsap is None
 
 
 class TestImplausibleValues:

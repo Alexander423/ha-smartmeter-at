@@ -1,0 +1,50 @@
+# Energienetze Steiermark
+#
+# Reference profile for the P1 interface. Same Sagemcom meter family as Netz
+# Niederoesterreich, but wired as DSMR P1 rather than M-Bus, which is the
+# clearest evidence that the interface follows the operator and not the meter.
+#
+# The frame layout is transcribed from the sagemcom-dsmr project, which reads a
+# T210-D-r on this network: 115200 8N1, no link layer at all, and the DLMS
+# ciphering APDU written straight onto the line. Security control 0x30 means the
+# telegrams are authenticated as well as encrypted, which is why the portal
+# gives out two keys.
+name: Energienetze Steiermark
+status: documented
+regions: [Steiermark]
+interface: p1
+manufacturer: Sagemcom
+model: T216-D / T210-D / S210
+
+# P1 has no M-Bus transport layer, so there are no TSAP bytes to strip.
+tsap: null
+reassembly_timeout: 15.0
+
+# Security Suite 0, authentication and encryption applied.
+security_control: 0x30
+header_order: sc_fc
+auth_key_expected: true
+
+layout: obis_tagged
+
+expected_obis:
+  - "0-0:1.0.0.255"
+  - "0-0:96.1.0.255"
+  - "1-0:32.7.0.255"
+  - "1-0:31.7.0.255"
+  - "1-0:1.7.0.255"
+  - "1-0:2.7.0.255"
+  - "1-0:1.8.0.255"
+  - "1-0:2.8.0.255"
+
+notes: >-
+  This is a P1 interface, not M-Bus. It needs a USB P1 cable rather than an
+  M-Bus adapter, and the two are not interchangeable. Put the GUEK in the key
+  field and the GAK in the authentication key field; with both, every telegram
+  is checked for authenticity as well as decrypted.
+
+key_source: >-
+  Activate the customer interface in the portal at www.e-netze.at. Both keys are
+  there afterwards, listed as GLOBAL UNICAST ENCRYPTION KEY (GUEK) and GLOBAL
+  AUTHENTICATION KEY (GAK). They are well hidden. Activation needs a meter in
+  the IME Opt-In or IMS Standard configuration.

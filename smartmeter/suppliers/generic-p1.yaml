@@ -1,0 +1,33 @@
+# Generic DSMR P1
+#
+# Fallback for a meter whose RJ12 socket is wired as P1: pin 1 +5V, pin 2 Data
+# Request, pin 3 Data Ground, pin 5 Data, pin 6 Power Ground. 115200 8N1, no
+# link layer, the DLMS APDU straight onto the line.
+#
+# Use this if your operator is not listed and your meter's connection guide
+# mentions P1 or DSMR.
+name: Generic P1 (auto-detect)
+status: assumed
+regions: []
+interface: p1
+manufacturer: Unknown
+model: Smart meter with a DSMR P1 port
+
+tsap: null
+reassembly_timeout: 15.0
+
+security_control: 0x30
+header_order: auto
+auth_key_expected: true
+
+layout: obis_tagged
+expected_obis: []
+
+notes: >-
+  Needs a USB P1 cable. If your operator issued two keys, put the encryption key
+  in the key field and the authentication key in the authentication key field.
+  With one key it still decodes, only the authenticity check is skipped.
+
+key_source: >-
+  Ask your grid operator to activate the customer interface. P1 operators
+  usually issue two keys, a GUEK and a GAK.

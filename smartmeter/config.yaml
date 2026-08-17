@@ -1,10 +1,10 @@
 ---
 name: Austrian Smart Meter
-version: "0.1.0"
+version: "0.2.0"
 slug: smartmeter
 description: >-
-  Reads the M-Bus customer interface of an Austrian smart meter and publishes
-  voltage, current, power and energy to Home Assistant over MQTT.
+  Reads the customer interface of an Austrian smart meter over M-Bus, P1 or
+  infrared and publishes voltage, current, power and energy over MQTT.
 url: https://github.com/Alexander423/ha-smartmeter-at
 # No profile has been confirmed against a physical meter yet.
 stage: experimental
@@ -48,10 +48,13 @@ options:
   log_level: info
 
 schema:
-  # The grid operator. Anything other than tinetz and salzburg-netz has not
-  # been checked against that operator's own documentation.
+  # The grid operator, ordered by Bundesland. Which of the three customer
+  # interfaces you get follows from the operator, not from the meter model, so
+  # this choice also decides whether you need an M-Bus adapter, a P1 cable or an
+  # infrared read head. Three operators are listed only to explain that their
+  # meters cannot be read at all.
   supplier: >-
-    list(tinetz|salzburg-netz|ikb|vorarlberger-energienetze|evn-netz-noe|kaernten-netz|generic-ksm-west)
+    list(netz-burgenland|kaernten-netz|stw-klagenfurt|energie-klagenfurt|netz-noe|netz-ooe|linz-netz|salzburg-netz|energienetze-steiermark|energienetze-graz|feistritzwerke|tinetz|ikb|vorarlberger-energienetze|wiener-netze|generic-mbus|generic-p1|generic-ir)
   # Renders as a dropdown of the serial devices actually attached to the host.
   # Optional so that replay mode works on a machine with no adapter; the add-on
   # asks for it with a proper explanation when it is really needed.
@@ -59,8 +62,8 @@ schema:
   # The 128 bit key from the grid operator, 32 hexadecimal characters. Checked
   # here so a typo is caught before the add-on starts.
   key: match(^[0-9A-Fa-f]{32}$)
-  # Only if your operator issued a second key for authentication. Almost nobody
-  # does.
+  # The second key, where the operator issues one. The P1 operators do: their
+  # portals show a GUEK and a GAK, and the GAK goes here.
   auth_key: match(^[0-9A-Fa-f]{32}$)?
   # 0 publishes every telegram, which is one database write every 5 seconds.
   min_publish_interval: int(0,3600)

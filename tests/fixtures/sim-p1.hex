@@ -1,0 +1,12 @@
+# Synthetic. Produced by tools/generate_fixtures.py, not captured from a meter.
+#
+# The DSMR P1 interface used by Energienetze Steiermark and Kaernten Netz: no
+# link layer at all, just the DLMS ciphering APDU on the line at 115200 8N1.
+# Security control 0x30, so the telegram is authenticated as well as encrypted
+# and the 12 byte GCM tag is on the wire. Both keys are the test key here; a
+# real meter has a separate GUEK and GAK.
+#
+# One line, because one telegram is one APDU on this interface however long it
+# gets.
+#
+db085341470102030405820136300000126b6f8cf28d7abc04b4cc75a5684b164321ad120c929d001f951181049bfcf476215a018f51f08ab17f29cc8fd06a683da1e7e9a4bec443718937589e4d064963b60787df96db683dea0f1d93dc8ad208fa95dc2a9f5a337929790055123e0be0e82dc43c7b780a7d8722217b0884216513c3cae77facdcee47e2ce5a642a9c7e61238427ffb28fdf3491dec2ec160443dad37ab903e7df4b377559d17cde8996dfa4c21318060579ecdb2d34e38cee8056a111899c41acc7c561c8daff78aa22321937273ffa7eed6eccbeab4b52e2bb422f6ef743c1c6338b9c8eea6ce7ffd6b203aac1941b40b3ba6ae99e8230aee179ffd3b569aeccb4a9b4a28eafc39561c353f41564a52f96e3442b699292f6cbb6fbbcc54adaf501ecea1e1c20f08e15ea89157fe56d8a278f6629b49b7baa7b900a

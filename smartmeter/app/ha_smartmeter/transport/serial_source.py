@@ -67,11 +67,30 @@ class SerialSource(Source):
             raise SerialUnavailableError(
                 f"cannot open {self._port}: {exc}",
                 hint=(
-                    f"Home Assistant cannot open {self._port}. Check that the M-Bus adapter "
+                    f"Home Assistant cannot open {self._port}. Check that the adapter "
                     "is plugged in, then reopen the add-on configuration and pick the device "
                     "from the list again: USB devices can change name after a reboot."
                 ),
             ) from exc
+        self._raise_data_request()
+
+    def _raise_data_request(self) -> None:
+        """DSMR P1 meters only send while the Data Request line is high.
+
+        Most P1 cables tie that pin to +5V and this does nothing. The ones that
+        do not expect the host to raise DTR or RTS, and without it the line
+        stays silent for ever with no error to show for it.
+        """
+        wanted = self._settings.data_request
+        if wanted == "none" or self._serial is None:
+            return
+        for line in ("dtr", "rts"):
+            if wanted in (line, "both"):
+                try:
+                    setattr(self._serial, line, True)
+                except (serial.SerialException, OSError) as exc:
+                    _LOGGER.debug("Could not raise %s on %s: %s", line.upper(), self._port, exc)
+        _LOGGER.info("Raised the P1 data request line (%s) on %s", wanted, self._port)
 
     async def read(self) -> bytes:
         return await asyncio.to_thread(self._read_blocking)

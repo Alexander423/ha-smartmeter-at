@@ -40,18 +40,32 @@ def parse_hex_file(text: str) -> list[bytes]:
 
 
 def group_telegrams(frames: list[bytes]) -> list[list[bytes]]:
-    """Split a flat list of frames into telegrams using the CI FIN bit."""
+    """Split a flat list of frames into telegrams.
+
+    The capture file does not say which interface it came from, but the frames
+    do: an M-Bus frame starts with 0x68 and carries its FIN bit in the CI field,
+    an HDLC frame starts with 0x7E and carries a segmentation bit in the frame
+    format field, and a P1 telegram is a bare DLMS APDU starting with 0xDB that
+    is complete on its own.
+    """
     telegrams: list[list[bytes]] = []
     current: list[bytes] = []
     for frame in frames:
         current.append(frame)
-        ci = frame[6] if len(frame) > 6 else 0x10
-        if ci & 0x10:
+        if _is_last_frame(frame):
             telegrams.append(current)
             current = []
     if current:
         telegrams.append(current)
     return telegrams
+
+
+def _is_last_frame(frame: bytes) -> bool:
+    if frame[:1] == b"\x68":
+        return len(frame) <= 6 or bool(frame[6] & 0x10)  # CI FIN bit
+    if frame[:1] == b"\x7e":
+        return len(frame) <= 1 or not frame[1] & 0x08  # HDLC segmentation bit
+    return True  # a bare APDU is a whole telegram
 
 
 class ReplaySource(Source):

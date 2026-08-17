@@ -1,18 +1,15 @@
 # IKB - Innsbrucker Kommunalbetriebe
 #
-# Member of the KSM West cooperation, so the specification is the shared one.
-# No IKB document has been read for this profile: it is a copy of the TINETZ
-# reference. If you have an IKB meter, a capture would let this be promoted.
+# Member of the KSM West cooperation, and the Oesterreichs Energie overview
+# lists IKB with the Kaifa MA110M and MA309M on M-Bus, the same meters as
+# TINETZ. No IKB document has been read, so the frame details are inherited from
+# the TINETZ reference rather than confirmed.
 name: IKB (Innsbrucker Kommunalbetriebe)
 status: assumed
-manufacturer: Sagemcom
-model: T210-D (M-Bus customer interface)
-
-serial:
-  baudrate: 2400
-  bytesize: 8
-  parity: E
-  stopbits: 1
+regions: [Tirol]
+interface: mbus
+manufacturer: Kaifa
+model: MA309M / MA110M
 
 tsap: [0x01, 0x67]
 reassembly_timeout: 15.0
@@ -33,8 +30,9 @@ expected_obis:
   - "1-0:2.8.0.255"
 
 notes: >-
-  Copied from the TINETZ reference because IKB is part of the same KSM West
-  cooperation. Nobody has checked it against an IKB meter.
+  The meter and the interface are confirmed from the Oesterreichs Energie
+  overview. The frame details are copied from TINETZ on the strength of the
+  shared KSM West specification.
 
 key_source: >-
   Request the key from IKB customer service. It is issued as 32 hexadecimal

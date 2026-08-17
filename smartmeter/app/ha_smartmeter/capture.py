@@ -23,7 +23,6 @@ from datetime import datetime
 from pathlib import Path
 
 from .logging_setup import redact
-from .models import MBusFrame
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,13 +68,14 @@ class FrameCapture:
     def finished(self) -> bool:
         return self._closed
 
-    def write(self, frame: MBusFrame) -> None:
+    def write(self, raw: bytes) -> None:
+        """`raw` is one link-layer frame exactly as it arrived on the wire."""
         if self._closed:
             return
         if self._count >= self._max_frames:
             self._finish(f"stopped after {self._max_frames} frames")
             return
-        self._line(frame.raw.hex())
+        self._line(raw.hex())
         self._count += 1
 
     def close(self) -> None:

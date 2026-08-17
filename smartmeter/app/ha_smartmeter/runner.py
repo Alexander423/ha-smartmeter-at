@@ -24,7 +24,6 @@ from .capture import FrameCapture
 from .config import MqttSettings, Options
 from .decoder import Decoder
 from .errors import SerialUnavailableError, SmartmeterError
-from .models import MBusFrame
 from .mqtt.publisher import MqttPublisher
 from .status import Status
 from .transport import Source
@@ -201,11 +200,12 @@ class Runner:
 
     def _sync_counters(self) -> None:
         status, decoder, publisher = self.status, self._decoder, self._publisher
-        status.frames = decoder.reader.stats.frames
-        status.checksum_errors = decoder.reader.stats.checksum_errors
-        status.discarded_bytes = decoder.reader.stats.discarded
-        status.reassembly_timeouts = decoder.reassembler.stats.timeouts
-        status.out_of_order = decoder.reassembler.stats.out_of_order
+        framer = decoder.framer.stats
+        status.frames = framer.frames
+        status.checksum_errors = framer.checksum_errors
+        status.discarded_bytes = framer.discarded
+        status.reassembly_timeouts = framer.timeouts
+        status.out_of_order = framer.out_of_order
         status.telegrams = decoder.stats.telegrams
         status.decode_failures = decoder.stats.decode_failures
         if decoder.stats.last_error and not status.last_error:
@@ -220,10 +220,10 @@ class Runner:
 
     # ---------------------------------------------------------------- plumbing
 
-    def _on_frame(self, frame: MBusFrame) -> None:
-        self.status.note_frame(frame.raw)
+    def _on_frame(self, raw: bytes) -> None:
+        self.status.note_frame(raw)
         if self._capture is not None and not self._capture.finished:
-            self._capture.write(frame)
+            self._capture.write(raw)
 
     def _start_capture(self) -> None:
         if not self.options.capture_raw:

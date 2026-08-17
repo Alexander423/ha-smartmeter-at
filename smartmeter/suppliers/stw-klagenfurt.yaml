@@ -1,0 +1,36 @@
+# Stadtwerke Klagenfurt
+#
+# Listed with the Landis+Gyr E450, the same meter Netz Burgenland uses on wired
+# M-Bus. Not to be confused with Energie Klagenfurt, which uses NES meters on
+# the MEP port and cannot be read by this add-on at all.
+name: Stadtwerke Klagenfurt
+status: assumed
+regions: [Kaernten]
+interface: mbus
+manufacturer: Landis+Gyr
+model: E450
+
+tsap: auto
+reassembly_timeout: 15.0
+
+security_control: 0x21
+header_order: auto
+
+layout: obis_tagged
+
+expected_obis:
+  - "0-0:1.0.0.255"
+  - "0-0:96.1.0.255"
+  - "1-0:32.7.0.255"
+  - "1-0:31.7.0.255"
+  - "1-0:1.7.0.255"
+  - "1-0:2.7.0.255"
+  - "1-0:1.8.0.255"
+  - "1-0:2.8.0.255"
+
+notes: >-
+  Only the meter model and the interface are known. Everything else is detected
+  from the first telegram.
+
+key_source: >-
+  Request the customer interface and the key from Stadtwerke Klagenfurt.
