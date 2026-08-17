@@ -53,6 +53,12 @@ class TestObisTaggedLayout:
         assert telegram.readings["active_energy_plus"].value == 1234567
         assert telegram.readings["meter_number"].value == "1SAG1234567890"
 
+    def test_unscaled_counters_stay_integers(self, sim):
+        telegram = decode(sim)
+        assert telegram.readings["active_energy_plus"].value == 1234567
+        assert isinstance(telegram.readings["active_energy_plus"].value, int)
+        assert isinstance(telegram.readings["active_power_plus"].value, int)
+
     def test_units_come_from_the_registry(self, sim):
         telegram = decode(sim)
         assert telegram.readings["voltage_l1"].unit == "V"

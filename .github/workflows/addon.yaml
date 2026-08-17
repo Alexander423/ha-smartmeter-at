@@ -1,0 +1,56 @@
+---
+name: Add-on
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Add-on configuration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      # Checks config.yaml against what Supervisor will accept, which is a
+      # longer list of rules than it looks.
+      - uses: frenck/action-addon-linter@v2
+        with:
+          path: "./smartmeter"
+
+  hadolint:
+    name: Dockerfile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: hadolint/hadolint-action@v3.3.0
+        with:
+          dockerfile: smartmeter/Dockerfile
+
+  build:
+    name: Build ${{ matrix.arch }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [aarch64, amd64]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      # Supervisor builds this on the user's own machine, so the build has to
+      # work on both architectures from a clean checkout. Nothing is pushed.
+      - uses: docker/build-push-action@v6
+        with:
+          context: ./smartmeter
+          file: ./smartmeter/Dockerfile
+          platforms: ${{ matrix.arch == 'aarch64' && 'linux/arm64' || 'linux/amd64' }}
+          build-args: |
+            BUILD_ARCH=${{ matrix.arch }}
+            BUILD_VERSION=ci
+          push: false
+          load: false

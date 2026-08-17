@@ -1,0 +1,61 @@
+---
+configuration:
+  supplier:
+    name: Netzbetreiber
+    description: >-
+      Ihr Netzbetreiber, also die Firma, der der Zaehler gehoert, nicht Ihr
+      Stromlieferant. Nur TINETZ und Salzburg Netz sind aus einem Dokument des
+      Betreibers uebernommen; die uebrigen sind aus der gemeinsamen Spezifikation
+      abgeleitet und koennen abweichen. Waehlen Sie Generic, wenn Ihrer fehlt.
+  port:
+    name: M-Bus-Adapter
+    description: >-
+      Das serielle Geraet, unter dem der Adapter erscheint. Ist die Liste leer,
+      steckt der Adapter nicht, oder es handelt sich um ein einfaches
+      USB-Seriell-Kabel statt um ein M-Bus-Slave-Modul.
+  key:
+    name: Schluessel
+    description: >-
+      Die 32 Zeichen, die Sie von Ihrem Netzbetreiber erhalten haben. Kopieren
+      Sie ihn, tippen Sie ihn nicht ab. Er verlaesst dieses Add-on nicht und
+      wird nie ins Protokoll geschrieben.
+  auth_key:
+    name: Authentifizierungsschluessel
+    description: >-
+      Nur ausfuellen, wenn Ihr Netzbetreiber einen zweiten Schluessel ausgegeben
+      hat. Das tun die wenigsten. Damit wird jedes Telegramm zusaetzlich auf
+      Echtheit geprueft.
+  min_publish_interval:
+    name: Mindestabstand zwischen Aktualisierungen in Sekunden
+    description: >-
+      Der Zaehler sendet alle 5 Sekunden ein Telegramm; 0 veroeffentlicht alle,
+      das sind rund 17000 Datenbankeintraege pro Sensor und Tag. 30 oder 60
+      reduziert das, macht die Leistungskurve aber grober. Die Zaehlerstaende
+      bleiben in beiden Faellen korrekt.
+  stale_after:
+    name: Sekunden bis Entitaeten als nicht verfuegbar gelten
+    description: >-
+      Wie lange nach dem letzten Telegramm gewartet wird, bevor die Sensoren in
+      Home Assistant auf nicht verfuegbar gesetzt werden. 30 entspricht sechs
+      ausgefallenen Telegrammen.
+  capture_raw:
+    name: Rohdaten mitschneiden
+    description: >-
+      Schreibt die empfangenen Frames nach /config/captures, damit sie einem
+      Fehlerbericht beigelegt werden koennen. Der Schluessel steht nicht in der
+      Datei. Der Mitschnitt endet nach 2000 Frames von selbst.
+  device_name:
+    name: Geraetename
+    description: >-
+      Wie der Zaehler in Home Assistant heissen soll. Leer lassen, um die
+      Zaehlernummer zu verwenden.
+  replay_file:
+    name: Wiedergabedatei
+    description: >-
+      Entwickleroption. Liest Frames aus dieser Datei statt von der seriellen
+      Schnittstelle. So wird dieses Add-on ohne Adapter entwickelt.
+  log_level:
+    name: Protokollstufe
+    description: >-
+      Auf info belassen. Debug ergaenzt einen Hex-Dump jedes Frames; genau das
+      wird gebraucht, wenn etwas nicht dekodiert wird.

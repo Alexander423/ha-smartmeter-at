@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart meter</title>
+<style>
+  :root {
+    --bg: #f5f5f5; --card: #fff; --fg: #212121; --muted: #727272;
+    --line: #e0e0e0; --ok: #0f9d58; --warn: #f4b400; --bad: #db4437;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #111417; --card: #1c1f22; --fg: #e1e1e1; --muted: #9b9b9b;
+      --line: #2c3033; --ok: #37b06d; --warn: #e2b03c; --bad: #e05d52;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 16px; background: var(--bg); color: var(--fg);
+    font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+    padding: 16px; margin-bottom: 16px;
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  h2 { font-size: 14px; margin: 0 0 12px; color: var(--muted); font-weight: 600;
+       text-transform: uppercase; letter-spacing: .04em; }
+  .state { display: flex; align-items: baseline; gap: 10px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+  .dot.ok { background: var(--ok); } .dot.warn { background: var(--warn); }
+  .dot.bad { background: var(--bad); } .dot.idle { background: var(--muted); }
+  .muted { color: var(--muted); }
+  .hint { margin-top: 10px; padding: 10px 12px; border-left: 3px solid var(--warn);
+          background: rgba(244,180,0,.10); border-radius: 0 4px 4px 0; }
+  .hint.bad { border-color: var(--bad); background: rgba(219,68,55,.10); }
+  table { width: 100%; border-collapse: collapse; }
+  td, th { padding: 6px 0; text-align: left; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 500; }
+  tr:last-child td, tr:last-child th { border-bottom: none; }
+  td.value { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .stat { font-size: 20px; font-variant-numeric: tabular-nums; }
+  .stat-label { color: var(--muted); font-size: 12px; }
+  pre { margin: 0; overflow-x: auto; font-size: 11px; line-height: 1.7;
+        font-family: ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace; }
+  footer { color: var(--muted); font-size: 12px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="state"><span id="dot" class="dot idle"></span>
+    <div><h1 id="state">Loading</h1><div id="detail" class="muted"></div></div>
+  </div>
+  <div id="hint" class="hint" hidden></div>
+</div>
+
+<div class="card">
+  <h2>Meter</h2>
+  <table><tbody id="meter"></tbody></table>
+</div>
+
+<div class="card">
+  <h2>Latest reading</h2>
+  <table><tbody id="values"><tr><td class="muted">Nothing decoded yet</td></tr></tbody></table>
+</div>
+
+<div class="card">
+  <h2>Counters</h2>
+  <div class="grid" id="counters"></div>
+</div>
+
+<div class="card">
+  <h2>Last frames received</h2>
+  <p class="muted" style="margin-top:0">Encrypted, as they arrived. Newest first.</p>
+  <pre id="frames">waiting</pre>
+</div>
+
+<footer id="footer"></footer>
+
+<script>
+const UNITS = {
+  clock: "", meter_number: "", logical_device_name: "",
+  voltage_l1: "V", voltage_l2: "V", voltage_l3: "V",
+  current_l1: "A", current_l2: "A", current_l3: "A",
+  active_power_plus: "W", active_power_minus: "W",
+  active_energy_plus: "Wh", active_energy_minus: "Wh",
+  reactive_energy_plus: "varh", reactive_energy_minus: "varh",
+};
+const LABELS = {
+  clock: "Meter clock", meter_number: "Meter number",
+  logical_device_name: "Logical device name",
+  voltage_l1: "Voltage L1", voltage_l2: "Voltage L2", voltage_l3: "Voltage L3",
+  current_l1: "Current L1", current_l2: "Current L2", current_l3: "Current L3",
+  active_power_plus: "Active power import", active_power_minus: "Active power export",
+  active_energy_plus: "Active energy import", active_energy_minus: "Active energy export",
+  reactive_energy_plus: "Reactive energy import", reactive_energy_minus: "Reactive energy export",
+};
+const DOT = {
+  reading: "ok", stopped: "idle", starting: "idle",
+  "waiting for the first telegram": "warn", "no telegrams": "bad",
+  "no serial device": "bad", "serial device lost": "bad",
+};
+
+function rows(target, pairs) {
+  target.innerHTML = pairs
+    .map(([k, v]) => `<tr><th>${k}</th><td class="value">${v}</td></tr>`)
+    .join("") || '<tr><td class="muted">Nothing yet</td></tr>';
+}
+
+function render(s) {
+  document.getElementById("state").textContent = s.state;
+  document.getElementById("detail").textContent = s.detail || "";
+  document.getElementById("dot").className = "dot " + (DOT[s.state] || "warn");
+
+  const hint = document.getElementById("hint");
+  const notes = [];
+  if (s.error && s.error.hint) notes.push(s.error.hint);
+  if (s.profile.status !== "verified") {
+    notes.push(`The ${s.profile.name} profile is marked "${s.profile.status}": nobody has `
+      + "confirmed it against a physical meter. If the values look wrong, that is the "
+      + "first thing to suspect.");
+  }
+  hint.hidden = notes.length === 0;
+  hint.className = "hint" + (s.error && s.error.hint ? " bad" : "");
+  hint.innerHTML = notes.map(n => `<div>${n}</div>`).join("");
+
+  rows(document.getElementById("meter"), [
+    ["Operator profile", `${s.profile.name} (${s.profile.status})`],
+    ["Source", s.source],
+    ["Meter number", s.meter.number || "not reported yet"],
+    ["Frame counter", s.meter.frame_counter || "-"],
+    ["Authenticity check", s.meter.authenticated ? "GCM tag verified" : "structural only"],
+    ["Last telegram", s.seconds_since_telegram === null ? "never"
+        : `${s.seconds_since_telegram} s ago`],
+    ["MQTT", s.mqtt.connected ? `connected, ${s.mqtt.entities} entities` : "not connected"],
+    ["Capture file", s.capture.path ? `${s.capture.path} (${s.capture.frames} frames)` : "off"],
+  ]);
+
+  rows(document.getElementById("values"), Object.entries(s.values).map(([k, v]) => {
+    const unit = UNITS[k] ? " " + UNITS[k] : "";
+    return [LABELS[k] || k, `${v}${unit}`];
+  }));
+
+  const c = s.counters;
+  document.getElementById("counters").innerHTML = [
+    ["Telegrams", c.telegrams], ["Frames", c.frames],
+    ["Published", s.mqtt.published], ["Throttled", s.mqtt.skipped_by_throttle],
+    ["Checksum errors", c.checksum_errors], ["Decode failures", c.decode_failures],
+    ["Lost segments", c.out_of_order + c.reassembly_timeouts],
+    ["Bytes discarded", c.discarded_bytes],
+  ].map(([label, value]) =>
+    `<div><div class="stat">${value}</div><div class="stat-label">${label}</div></div>`
+  ).join("");
+
+  document.getElementById("frames").textContent =
+    s.recent_frames.length ? s.recent_frames.join("\n") : "no frames yet";
+  document.getElementById("footer").textContent =
+    `ha-smartmeter-at ${s.version}, running for ${s.uptime_seconds} s`;
+}
+
+async function tick() {
+  try {
+    const response = await fetch("api/status", { cache: "no-store" });
+    if (response.ok) render(await response.json());
+  } catch (err) {
+    document.getElementById("state").textContent = "Status page cannot reach the add-on";
+  }
+}
+tick();
+setInterval(tick, 2000);
+</script>
+</body>
+</html>

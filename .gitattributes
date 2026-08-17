@@ -1,0 +1,6 @@
+# The add-on is built and run on Linux. run.sh in particular must have LF
+# endings or s6-overlay refuses to execute it, and that failure is reported as
+# "no such file or directory", which is not a helpful thing to debug.
+* text=auto eol=lf
+*.png binary
+*.hex text eol=lf

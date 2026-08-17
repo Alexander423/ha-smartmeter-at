@@ -1,0 +1,37 @@
+#include <tunables/global>
+
+profile smartmeter flags=(attach_disconnected,mediate_deleted) {
+  #include <abstractions/base>
+  #include <abstractions/python>
+
+  # s6-overlay
+  /init ix,
+  /bin/** ix,
+  /usr/bin/** ix,
+  /run/{s6,s6-rc*,service}/** ix,
+  /package/** ix,
+  /command/** ix,
+  /etc/services.d/** rwix,
+  /etc/cont-init.d/** rwix,
+  /etc/cont-finish.d/** rwix,
+  /run/{,**} rwk,
+  /dev/tty rw,
+
+  # bashio and the add-on itself
+  /usr/lib/bashio/** ix,
+  /tmp/** rwk,
+  /run.sh r,
+  /opt/smartmeter/** r,
+
+  # Serial adapters. The customer interface is read only, but a serial device
+  # has to be opened read-write to be configured at all.
+  /dev/tty[A-Z]* rw,
+  /dev/serial/** rw,
+  /dev/bus/usb/** rw,
+  /sys/devices/** r,
+  /sys/class/tty/** r,
+
+  # Add-on options, and the directory capture files are written to.
+  /data/** rw,
+  /config/** rw,
+}

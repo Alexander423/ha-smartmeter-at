@@ -215,6 +215,10 @@ def _coerce(
 
     if node.is_number:
         scale = _scale_for(entry, scaler_node, scales)
+        if scale == 1:
+            # Unscaled, so keep it an integer. An energy counter published as
+            # 1234567.0 rather than 1234567 is correct and looks like a bug.
+            return node.value
         value = node.value * scale
         return round(value, 6) if isinstance(value, float) else value
 

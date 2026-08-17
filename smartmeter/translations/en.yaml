@@ -1,0 +1,59 @@
+---
+configuration:
+  supplier:
+    name: Grid operator
+    description: >-
+      Your Netzbetreiber, which is the company that owns the meter, not the
+      company that bills you for electricity. Only TINETZ and Salzburg Netz are
+      transcribed from an operator document; the others are inferred from the
+      shared specification and may need adjusting. Choose Generic if yours is
+      not listed.
+  port:
+    name: M-Bus adapter
+    description: >-
+      The serial device the adapter appears as. If the list is empty the
+      adapter is not plugged in, or it is a plain USB serial cable rather than
+      an M-Bus slave module.
+  key:
+    name: Encryption key
+    description: >-
+      The 32 hexadecimal characters your grid operator sent you. Paste it, do
+      not type it. It never leaves this add-on and is never written to the log.
+  auth_key:
+    name: Authentication key
+    description: >-
+      Only fill this in if your operator issued a second key. Almost none do.
+      With it, every telegram is checked for authenticity as well as decrypted.
+  min_publish_interval:
+    name: Minimum seconds between updates
+    description: >-
+      The meter sends a telegram every 5 seconds and 0 publishes all of them,
+      which is around 17000 database rows a day per sensor. Setting 30 or 60
+      cuts that but makes the power graph coarser. Energy totals stay correct
+      either way.
+  stale_after:
+    name: Seconds before entities go unavailable
+    description: >-
+      How long to wait after the last telegram before marking the sensors
+      unavailable in Home Assistant. 30 is six missed telegrams.
+  capture_raw:
+    name: Save raw frames to a file
+    description: >-
+      Writes the frames as they arrive to /config/captures, so they can be
+      attached to a bug report. The key is not in the file. It stops on its own
+      after 2000 frames.
+  device_name:
+    name: Device name
+    description: >-
+      What the meter is called in Home Assistant. Leave empty to use the meter
+      number.
+  replay_file:
+    name: Replay file
+    description: >-
+      Development option. Reads frames from this file instead of the serial
+      port, which is how this add-on is worked on without an adapter.
+  log_level:
+    name: Log level
+    description: >-
+      Leave at info. Debug adds a hex dump of every frame, which is what to
+      send when something is not decoding.
